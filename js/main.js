@@ -21,7 +21,11 @@
   const F = function () { return S.flags; };
   const STAT_NAMES = { health: 'Health', mind: 'Mind', rep: 'Reputation', trust: 'Trust', heat: 'Heat' };
 
-  function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable */ } }
+  function save() {
+    if (!S || lock || endingShown) return false;
+    S.pos = [G.player.x, G.player.z, G.player.rot];
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); return true; } catch (e) { return false; }
+  }
   function loadSave() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); return s && s.stats ? s : null; } catch (e) { return null; } }
   function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* storage unavailable */ } }
 
@@ -133,7 +137,7 @@
     if (st.health <= 0) return ending('infirmary');
     if (st.mind <= 0) return ending('walls');
     if (st.heat >= 100) return ending('adseg');
-    objectives(); busy = false; G.locked = false;
+    objectives(); busy = false; G.locked = false; save();
   }
   function face(npc) {
     const p = G.player, dx = npc.x - p.x, dz = npc.z - p.z;
@@ -912,25 +916,30 @@
     },
   ];
 
-  async function startDay(fromSleep) {
+  async function startDay(fromSleep, resume) {
     const d = DAYS[S.di];
     busy = true; G.locked = true;
     if (!fromSleep) await fade(true);
-    S.done = {}; S.ap = d.ap; lock = null; $('timer').hidden = true;
+    if (!resume) { S.done = {}; S.ap = d.ap; S.mid = false; }
+    lock = null; $('timer').hidden = true;
     G.alarm = false; G.sfx.siren(false); $('red').classList.remove('on');
-    G.setSky(d.sky); G.setCrowd(d.crowd); G.placeCast(d.cast());
+    G.setSky(d.sky);
+    if (d.n === 14 && S.done.cell) { G.setCrowd('none'); G.placeCast({ raymond: RAY_CELL }); }
+    else { G.setCrowd(d.crowd); G.placeCast(d.cast()); }
     ['raymond', 'nathan', 'alvarez', 'briggs', 'cutter', 'duke'].forEach(function (k) {
       if ((k === 'raymond' && S.di > 0) || (k === 'nathan' && S.di > 1) || (k === 'alvarez') || (k === 'briggs' && S.di > 3) || (k === 'cutter' && S.di > 2)) G.npcs[k].known = true;
     });
     G.npcs.dee.known = G.npcs.dom2.known = G.npcs.tiny.known = S.di > 1;
-    G.teleport(d.spawn[0], d.spawn[1], d.spawn[2]);
-    save(); hud(); $('objlist').innerHTML = ''; G.setMarker(null);
+    if (resume && S.pos) G.teleport(S.pos[0], S.pos[1], S.pos[2]); else G.teleport(d.spawn[0], d.spawn[1], d.spawn[2]);
+    if (!resume) save(); hud(); $('objlist').innerHTML = ''; G.setMarker(null);
     $('hud').hidden = false;
     await card('DAY ' + d.n, d.title + '  ·  ' + d.time, 2800);
     G.sfx.clang();
     await fade(false);
     busy = false;
+    if (resume) { objectives(); G.locked = false; toast('Save loaded', 'good'); return; }
     await run(d.start);
+    S.mid = true; save();
   }
 
   // ---------------------------------------------------------------- endings
@@ -1094,17 +1103,23 @@
       ]);
       G.sfx.clang();
       await startDay(true);
-    } else await startDay(false);
+    } else await startDay(false, !!saved.mid);
   }
   $('new').addEventListener('click', function () { begin(null); });
   $('cont').addEventListener('click', function () { begin(loadSave()); });
   $('again').addEventListener('click', function () { $('fade').classList.remove('on'); begin(null); });
 
   if (G.isTouch) document.documentElement.classList.add('touch');
+  $('save').addEventListener('click', function () {
+    if (busy || lock) return toast("Can't save in the middle of this", 'bad');
+    toast(save() ? 'Game saved — use Continue on the title screen' : 'This browser is blocking saves', save() ? 'good' : 'bad');
+  });
+  window.addEventListener('pagehide', function () { if (!busy) save(); });
+  document.addEventListener('visibilitychange', function () { if (document.hidden && !busy) save(); });
   G.boot();
   buildThings();
   S = newState(); G.S = S;
-  $('cont').hidden = !loadSave();
+  (function () { const sv = loadSave(); $('cont').hidden = !sv; if (sv) $('cont').textContent = 'Continue · Day ' + DAYS[sv.di].n; })();
   // test hooks
   G.debug = { state: function () { return S; }, goto: function (i) { S.di = i; return startDay(false); }, advance: advance, busy: function () { return busy; }, ending: ending };
 })();

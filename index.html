@@ -47,7 +47,7 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 #objlist li.cur{color:var(--issue)}
 #objlist li.cur::before{border-color:var(--sodium);background:var(--sodium)}
 #objlist li.done{text-decoration:line-through;opacity:.55}
-#mute{pointer-events:auto;background:none;border:0;color:var(--dim);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:6px 0 0}
+#mute,#save{pointer-events:auto;background:none;border:0;color:var(--dim);font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:6px 0 0}
 
 #arrow{position:absolute;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);text-align:center;pointer-events:none;color:var(--sodium);font-weight:700;letter-spacing:.08em;font-size:13px;text-shadow:0 1px 3px #000}
 #arrow-i{width:0;height:0;margin:0 auto 2px;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:20px solid var(--sodium);filter:drop-shadow(0 1px 2px #000)}
@@ -69,7 +69,8 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 @keyframes tin{0%{opacity:0;transform:translateX(-12px)}8%,80%{opacity:1;transform:none}100%{opacity:0}}
 
 /* dialog */
-#dialog{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(760px,calc(100vw - 24px));box-sizing:border-box;background:rgba(14,16,18,.93);border:1px solid var(--rule);border-top:3px solid var(--sodium);padding:14px 18px 12px;cursor:pointer;max-height:72%;overflow-y:auto}
+#toasts{z-index:6}
+#dialog{z-index:5;position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(760px,calc(100vw - 24px));box-sizing:border-box;background:rgba(14,16,18,.93);border:1px solid var(--rule);border-top:3px solid var(--sodium);padding:14px 18px 12px;cursor:pointer;max-height:72%;overflow-y:auto}
 #speaker{font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sodium);font-size:15px;margin-bottom:4px}
 #dtext{font-family:var(--prose);font-size:18px;line-height:1.5;min-height:3em;-webkit-user-select:text;user-select:text}
 #dtext.narr{font-style:italic;color:#d6d1c2}
@@ -147,7 +148,7 @@ h1{font-size:clamp(64px,15vw,150px);line-height:.86;margin:8px 0 14px;font-weigh
       <div id="daylabel">DAY 1</div>
       <div id="daytitle"></div>
       <ul id="objlist"></ul>
-      <button id="mute" type="button">Sound on</button>
+      <button id="save" type="button">Save game</button> &nbsp; <button id="mute" type="button">Sound on</button>
     </div>
   </div>
 
@@ -188,7 +189,7 @@ h1{font-size:clamp(64px,15vw,150px);line-height:.86;margin:8px 0 14px;font-weigh
         <button id="new" class="btn" type="button">New sentence</button>
         <button id="cont" class="btn ghost" type="button" hidden>Continue</button>
       </div>
-      <p class="fine">Keyboard: WASD walk · drag mouse or ←/→ to look · Shift run · E interact · 1–4 choose.<br>Touch: drag the left side to walk, the right side to look, tap the yellow prompt.<br>A work of fiction for adults. Contains prison violence, coercion and mature themes.</p>
+      <p class="fine">Keyboard: WASD walk · drag mouse or ←/→ to look · Shift run · E interact · 1–4 choose.<br>Touch: drag the left side to walk, the right side to look, tap the yellow prompt.<br>Your game saves automatically after every conversation; use Continue to come back.<br>A work of fiction for adults. Contains prison violence, coercion and mature themes.</p>
     </div>
   </div>
 
