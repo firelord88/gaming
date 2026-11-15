@@ -12,7 +12,7 @@ Princess Nicky is imprisoned in the Tower of Eternal Misery, and the Kingdom of 
 |---|---|---|---|
 | 1. The Forbidden Swamp | **Swamp Thing**, the Queen of Stench | Swamp Breath (drops your morale to zero and slows you), Toxic Cloud, The Funk Bomb (clears the whole battlefield) | **The Forgotten Biceps**: 3x sword damage, more hearts |
 | 2. The Kingdom of Endless Heat | **The Human Crockpot**, Lord of Low and Slow | Slow Cook (heat ring that drains you), Pressure Release (steam blast), Extra Seasoning (scrambles your controls), Low and Slow (he heals; the battle may take 12 hours). He also charges, and gets dizzy if he hits a wall. | **The Legendary Hair Restoration**: handsome face and flowing hair. Unlocks the Blinding Smile and the Hair Whip. |
-| Final: The Cemetery of Eternal Darkness | **The Undertaker**, the Toe Collector | Graveyard Stare (freezes you if you're in his line of sight), The Long Reach (from three business days away), Toe-less Terror (stomp shockwave), The Final Bell (summons spirits) | Ultimate ability **THE HANDSOME REVIVAL** unlocks mid-fight and finishes him |
+| Final: The Cemetery of Eternal Darkness | **The Undertaker**, the Toe Collector | Graveyard Stare (freezes you if you're in his line of sight), The Long Reach (from three business days away), Toe-less Terror (stomp shockwave), The Final Bell (summons spirits) | The ultimate ability **THE HANDSOME REVIVAL** unlocks mid-fight and finishes him. Beating him makes it Stephen's third power-up: a golden glow of full glory. |
 
 Then Stephen enters the tower, rescues Nicky and is crowned the greatest hero in Mythara history.
 
