@@ -1,23 +1,29 @@
 # gaming
 
-## Stephen's Quest: The Rescue of Princess Nicky
+## STEPHEN: THE LEGEND OF THE RESCUE
+
+*An epic tale of courage, questionable hygiene, and the return of greatness.*
 
 `stephens-quest/index.html` is a single-file browser game with no dependencies. Open it in any modern browser to play. It works on desktop and on phones (touch controls appear automatically).
 
-Stephen used to be a hero, but years on the couch cost him his muscles, his handsome looks and his great hair. Then the Undertaker kidnaps little Princess Nicky. To save her, Stephen fights through three chapters and gets part of his glory back after each boss:
+Princess Nicky is imprisoned in the Tower of Eternal Misery, and the Kingdom of Mythara's only hope is Stephen, who has lost his muscles, his hair and his handsome looks. An ancient prophecy says they will return.
 
-| Chapter | Boss | Reward |
-|---|---|---|
-| 1. The Soggy Swamp | **Swamp Thing** (throws mud, sets off stink clouds full of flies, dives and pops up under you) | **Muscles**: 3x punch damage, more hearts |
-| 2. The Simmering Kitchen | **The Human Crockpot** (shoots rings of stew and seasoning, sets off steam vents, charges; gets dizzy when he hits a wall) | **Handsome looks**: unlocks the Dazzling Smile (stuns enemies and heals you) |
-| 3. The Gloomy Graveyard | **The Undertaker** (thrown tombstones, zombie summons, teleport and coffin drops) | **Great hair**: unlocks the Hair Whip spin attack and faster movement |
-| Finale: Tower of Gloom | The Undertaker's last minions | Princess Nicky is rescued! |
+| Quest | Boss | Abilities | Reward |
+|---|---|---|---|
+| 1. The Forbidden Swamp | **Swamp Thing**, the Queen of Stench | Swamp Breath (drops your morale to zero and slows you), Toxic Cloud, The Funk Bomb (clears the whole battlefield) | **The Forgotten Biceps**: 3x sword damage, more hearts |
+| 2. The Kingdom of Endless Heat | **The Human Crockpot**, Lord of Low and Slow | Slow Cook (heat ring that drains you), Pressure Release (steam blast), Extra Seasoning (scrambles your controls), Low and Slow (he heals; the battle may take 12 hours). He also charges, and gets dizzy if he hits a wall. | **The Legendary Hair Restoration**: handsome face and flowing hair. Unlocks the Blinding Smile and the Hair Whip. |
+| Final: The Cemetery of Eternal Darkness | **The Undertaker**, the Toe Collector | Graveyard Stare (freezes you if you're in his line of sight), The Long Reach (from three business days away), Toe-less Terror (stomp shockwave), The Final Bell (summons spirits) | Ultimate ability **THE HANDSOME REVIVAL** unlocks mid-fight and finishes him |
+
+Then Stephen enters the tower, rescues Nicky and is crowned the greatest hero in Mythara history.
+
+*Coming soon: The Return of the Toe-less Terror, Part II.*
 
 ### Controls
 - Move: Arrow keys / WASD (touch: drag on the left side of the screen)
-- Punch: Space / J
-- Dazzling Smile: K (unlocked after chapter 2)
-- Hair Whip: L (unlocked after chapter 3)
+- Sword: Space / J
+- Blinding Smile: K (after Quest 2)
+- Hair Whip: L (after Quest 2)
+- The Handsome Revival: U (when it unlocks in the final battle)
 - Pause: P, Mute: M
 
-The game saves your progress after each chapter, so you can continue later. If Stephen faints, you restart from the beginning of that chapter.
+Progress is saved after each quest. If Stephen faints, you restart that quest.

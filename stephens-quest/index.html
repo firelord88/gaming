@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Stephen's Quest</title>
+<title>Stephen: The Legend of the Rescue</title>
 <style>
   html,body{margin:0;height:100%;background:#0b0b14;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;}
   #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
@@ -135,7 +135,8 @@ const held = (...ks) => ks.some(k => keys[k]);
 
 const joy = { id: null, ox: 0, oy: 0, dx: 0, dy: 0 };
 const BTNS = [
-  { id: 'atk', x: 870, y: 452, r: 52, label: 'PUNCH' },
+  { id: 'atk', x: 870, y: 452, r: 52, label: 'SWORD' },
+  { id: 'ult', x: 760, y: 370, r: 40, label: 'ULT' },
   { id: 'smile', x: 752, y: 478, r: 38, label: 'SMILE' },
   { id: 'hair', x: 880, y: 330, r: 38, label: 'HAIR' },
 ];
@@ -162,7 +163,7 @@ cv.addEventListener('pointerup', endJoy); cv.addEventListener('pointercancel', e
 const confirmPressed = () => wasPressed('enter', ' ') || !!tapped;
 
 /* ---------------- persistent state ---------------- */
-const SAVE_KEY = 'stephensQuest.v1';
+const SAVE_KEY = 'stephensQuest.v2';
 let game = { chapter: 0, look: { muscles: false, handsome: false, hair: false } };
 function saveGame() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(game)); } catch (e) { } }
 function loadSave() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.look && typeof s.chapter === 'number' && s.chapter > 0) return s; } catch (e) { } return null; }
@@ -171,91 +172,96 @@ function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { } 
 /* ---------------- story content ---------------- */
 const PROLOGUE = {
   bg: 'kingdom', right: 'nicky', pages: [
-    { who: 'Narrator', text: 'Once upon a time, in the Kingdom of Tumbleton, there lived a hero named Stephen.' },
-    { who: 'Narrator', text: 'Well... he USED to be a hero. Years on the couch had cost him his mighty muscles, his handsome good looks and, most tragic of all, his GREAT HAIR.' },
-    { who: 'Nicky', text: 'HEEEELP! Stephen! The Undertaker has locked me in his Tower of Gloom!' },
-    { who: 'Narrator', text: 'Little Princess Nicky. Tiny. Helpless. Extremely loud. And now kidnapped!' },
-    { who: 'Stephen', text: 'Me? Save the princess? I get winded opening a jar of pickles...' },
-    { who: 'Nicky', text: 'STEPHEN! You are the ONLY one who can do it! Pleeeease!' },
-    { who: 'Stephen', text: '...Okay. Okay! Hold on, Nicky. I am coming!' },
-    { who: 'Narrator', text: 'And so Stephen laced up his fuzzy slippers and set off. The road to the tower runs through three terrible places...' },
+    { who: 'Narrator', text: 'STEPHEN: THE LEGEND OF THE RESCUE. An epic tale of courage, questionable hygiene, and the return of greatness.' },
+    { who: 'Narrator', text: 'Long ago, in the Kingdom of Mythara, darkness descended upon the land.' },
+    { who: 'Nicky', text: 'HEEEELP! Somebody! Anybody!' },
+    { who: 'Narrator', text: 'The helpless Princess Nicky had been captured and imprisoned in the Tower of Eternal Misery by three of the most feared creatures ever to walk the earth.' },
+    { who: 'Narrator', text: 'The kingdom\'s only hope was Stephen. Unfortunately, Stephen was not exactly hero material at the time.' },
+    { who: 'Narrator', text: 'His muscles had vanished. His once-glorious hair was a distant memory. His handsome appearance had been replaced by the look of a man who had given up on life...' },
+    { who: 'Narrator', text: '...skipped leg day for several years, and forgotten what confidence felt like.' },
+    { who: 'Stephen', text: 'Hey. I can hear you, you know.' },
+    { who: 'Narrator', text: 'But destiny had other plans. An ancient prophecy foretold:' },
+    { who: 'Prophecy', text: '"When the princess cries and the kingdom falls, a once-great warrior shall rise. His muscles shall return, his hair shall flow, and his handsome face shall once again blind the enemies of evil."' },
+    { who: 'Stephen', text: '...Okay. Okay! Hold on, Nicky. I\'m coming!' },
+    { who: 'Narrator', text: 'And so Stephen began his quest.' },
   ]
 };
 
 const CHAPTERS = [
   {
-    title: 'Chapter 1: The Soggy Swamp', theme: 'swamp', boss: 'swamp', reward: 'muscles',
-    minions: { types: ['leech', 'leech', 'frog'], count: 10, max: 4 },
+    title: 'Quest 1: Swamp Thing', subtitle: 'The Queen of Stench', theme: 'swamp', boss: 'swamp', reward: 'muscles',
+    minions: { types: ['slime', 'slime', 'bug'], count: 10, max: 4 },
     intro: { right: null, pages: [
-      { who: 'Narrator', text: 'Chapter 1: The Soggy Swamp. Leeches. Frogs. A smell like a gym bag left in the rain.' },
-      { who: 'Stephen', text: 'Ugh. My noodle arms were not built for this. Okay... punch with SPACE (or J). Move with the ARROWS (or WASD).' },
+      { who: 'Narrator', text: 'Quest 1: Swamp Thing, the Queen of Stench. Deep within the Forbidden Swamp lived a terrifying creature whose presence could clear an entire battlefield without drawing a weapon.' },
+      { who: 'Narrator', text: 'Her weapon of choice? An odor so powerful that even the undead refused to approach. Her swamp was filled with poisonous clouds, mutant insects, and mysterious green slime.' },
+      { who: 'Narrator', text: 'Stephen entered the swamp with nothing but a rusty sword, questionable courage, and absolutely no upper-body strength.' },
+      { who: 'Stephen', text: 'Swing the sword with SPACE (or J). Move with the ARROWS (or WASD). How hard can it be?' },
     ] },
     bossIntro: { right: 'swamp', pages: [
-      { who: 'Swamp Thing', text: '*sniff* ...Ugh. Is that smell you or me? Doesn\'t matter. Nobody stomps through MY swamp, sweetie.' },
-      { who: 'Stephen', text: 'Ma\'am, I just need to get to the Tower of Gloom. Princess Nicky is in trouble.' },
-      { who: 'Swamp Thing', text: 'Then you\'ll have to get through ME first! Watch out for my stink clouds, darling. Even the flies can\'t take it!' },
+      { who: 'Swamp Thing', text: '*sniff* ...Well, well. A visitor. Nobody has made it this deep into MY swamp in years. Wonder why.' },
+      { who: 'Stephen', text: 'I\'m here for Princess Nicky. Stand aside!' },
+      { who: 'Swamp Thing', text: 'With THOSE arms? Darling, my Swamp Breath alone will drop your morale to zero. Let\'s see how you handle a Toxic Cloud... or my FUNK BOMB!' },
     ] },
     outro: { right: 'swamp', defeated: true, pages: [
-      { who: 'Swamp Thing', text: 'Ugh... I\'m all... dried up... Fine! Take your silly dumbbell. It was clogging my drain anyway.' },
-      { who: 'Narrator', text: 'From the muck, Stephen pulled out his long-lost GOLDEN DUMBBELL. He lifted it once... twice... a hundred times...' },
+      { who: 'Swamp Thing', text: 'Ugh... beaten... by a man with no upper-body strength...' },
+      { who: 'Narrator', text: 'Stephen barely survived the encounter. But from the depths of the swamp, something legendary rose to meet him...' },
     ] },
   },
   {
-    title: 'Chapter 2: The Simmering Kitchen', theme: 'kitchen', boss: 'crock', reward: 'handsome',
+    title: 'Quest 2: The Human Crockpot', subtitle: 'Lord of Low and Slow', theme: 'kitchen', boss: 'crock', reward: 'restore',
     minions: { types: ['meatball', 'meatball', 'sausage'], count: 12, max: 5 },
     intro: { right: null, pages: [
-      { who: 'Narrator', text: 'Chapter 2: The Simmering Kitchen. Something has been stewing here for a very, very long time.' },
-      { who: 'Stephen', text: 'Is that... chili? I love chili. Wait. Why is the chili looking at me?' },
+      { who: 'Narrator', text: 'Quest 2: The Human Crockpot, Lord of Low and Slow. Beyond the swamp lies the Kingdom of Endless Heat.' },
+      { who: 'Narrator', text: 'Its ruler is a massive beast who spends his days simmering in his own juices, surrounded by steam, mysterious aromas, and an endless supply of questionable seasoning.' },
+      { who: 'Narrator', text: 'His greatest power: generating enough heat and humidity to make an entire kingdom uncomfortable. Stephen approaches, now noticeably stronger.' },
     ] },
     bossIntro: { right: 'crock', pages: [
-      { who: 'Human Crockpot', text: 'I have been slow-cooking my revenge for EIGHT HOURS ON LOW! ...and it STILL needs more seasoning!' },
-      { who: 'Stephen', text: 'Revenge for what? We have never even met!' },
-      { who: 'Human Crockpot', text: 'Nobody ever eats the leftovers! NOBODY! Hmm... what this chili needs is a pinch of STEPHEN! Set to HIGH!' },
-      { who: 'Narrator', text: 'Tip: when the Crockpot charges and slams into a wall, he gets dizzy and takes DOUBLE damage!' },
+      { who: 'Human Crockpot', text: 'HA HA HA! You think those little muscles will save you? I\'ve been cooking since before you were born!' },
+      { who: 'Stephen', text: 'Then it\'s time somebody turned you OFF.' },
+      { who: 'Human Crockpot', text: 'Brave words! Let\'s see you survive my Slow Cook, my Pressure Release and my Extra Seasoning. And this battle? It\'ll be LOW AND SLOW!' },
+      { who: 'Narrator', text: 'Tip: stay out of his heat ring during Slow Cook. Avoid the seasoning, it scrambles your controls! When he charges into a wall he gets dizzy and takes DOUBLE damage.' },
     ] },
     outro: { right: 'crock', defeated: true, pages: [
-      { who: 'Human Crockpot', text: 'I\'m... overcooked... Somebody... unplug me...' },
-      { who: 'Narrator', text: 'In the back of the pantry, Stephen found an old MAGIC MIRROR. He wiped off the chili and looked inside...' },
+      { who: 'Human Crockpot', text: 'Overcooked... I\'m... overcooked... Somebody... set me to WARM...' },
+      { who: 'Narrator', text: 'After an exhausting battle, Stephen finally defeated the Crockpot. And as the steam cleared, his reward appeared...' },
     ] },
   },
   {
-    title: 'Chapter 3: The Gloomy Graveyard', theme: 'graveyard', boss: 'undertaker', reward: 'hair',
+    title: 'Final Quest: The Undertaker', subtitle: 'The Toe Collector', theme: 'graveyard', boss: 'undertaker', reward: null,
     minions: { types: ['zombie', 'zombie', 'bat'], count: 14, max: 5 },
     intro: { right: null, pages: [
-      { who: 'Narrator', text: 'Chapter 3: The Gloomy Graveyard. The Tower of Gloom looms just beyond the gates.' },
-      { who: 'Stephen', text: 'If things get crowded I can flash my DAZZLING SMILE with K. Nobody can resist this face.' },
+      { who: 'Narrator', text: 'Final Quest: The Undertaker, the Toe Collector. At the edge of the kingdom lies the Cemetery of Eternal Darkness.' },
+      { who: 'Narrator', text: 'There waits a towering, mysterious creature who walks among the dead. His height is legendary, he looks like a walking haunted house, and his feet have seen better days.' },
+      { who: 'Narrator', text: 'Nobody knows exactly how many toes remain. Some say he traded them for immortality. Others believe they were sacrificed in an ancient battle.' },
+      { who: 'Narrator', text: 'But this time Stephen is different. His muscles have returned. His hair flows majestically in the wind. His handsome face shines like the morning sun.' },
+      { who: 'Stephen', text: 'Blinding Smile on K. Hair Whip on L. Let\'s finish this.' },
     ] },
     bossIntro: { right: 'undertaker', pages: [
-      { who: 'The Undertaker', text: 'Heh. Heh. Heh. I measured you for a coffin the moment you left home, Stephen.' },
-      { who: 'Stephen', text: 'Where is Princess Nicky?!' },
-      { who: 'The Undertaker', text: 'Locked away in my tower. And don\'t bother calling that ambulance, Stephen. Where you\'re going, you need a hearse.' },
+      { who: 'The Undertaker', text: '...You should have stayed in the swamp.' },
+      { who: 'Narrator', text: 'Stephen draws his LEGENDARY SWORD. The final battle begins!' },
+      { who: 'Narrator', text: 'Beware: the Graveyard Stare freezes you (get out of his line of sight!), the Long Reach strikes from three business days away, the Toe-less Terror shakes the ground, and the Final Bell summons spirits.' },
     ] },
     outro: { right: 'undertaker', defeated: true, pages: [
-      { who: 'The Undertaker', text: 'Impossible... beaten by a man in... fuzzy slippers...' },
-      { who: 'Narrator', text: 'The Undertaker dropped a shining golden object: the LEGENDARY COMB. Stephen ran it through his scalp, just once...' },
-    ] },
-  },
-  {
-    title: 'Finale: The Tower of Gloom', theme: 'tower', boss: null, reward: null,
-    minions: { types: ['zombie', 'bat', 'ghost', 'meatball'], count: 18, max: 6 },
-    intro: { right: 'nicky', pages: [
-      { who: 'Nicky', text: 'Stephen! You made it! ...Wait, is that really you? You look AMAZING!' },
-      { who: 'Stephen', text: 'Muscles: back. Handsome: back. Hair: GLORIOUS. Hang on, Nicky!' },
-      { who: 'Narrator', text: 'The Undertaker\'s minions guard the cage! Use EVERYTHING: Punch (SPACE/J), Smile (K) and the HAIR WHIP (L)!' },
-    ] },
-    outro: { right: 'nicky', happy: true, pages: [
-      { who: 'Narrator', text: 'With one final hair flip, the cage lock shattered into a thousand pieces!' },
-      { who: 'Nicky', text: 'You saved me! You really, truly saved me! I knew you could do it!' },
-      { who: 'Stephen', text: 'Muscles. Handsome looks. Great hair. And a princess rescued. Not bad for a guy who could not open a pickle jar.' },
-      { who: 'Nicky', text: 'Can we go home now? I\'m hungry. ...But NOT for chili.' },
+      { who: 'The Undertaker', text: 'Too... handsome... I... can\'t... look...' },
+      { who: 'Narrator', text: 'The Undertaker was defeated. The darkness disappeared, and the gates to the princess\'s tower swung open.' },
     ] },
   },
 ];
 
+const ENDING = {
+  bg: 'tower', right: 'nicky', happy: true, pages: [
+    { who: 'Narrator', text: 'The Ending: The Return of the King. Stephen enters the tower. There sits Princess Nicky, waiting for her hero.' },
+    { who: 'Nicky', text: 'Stephen? Is that really you?' },
+    { who: 'Stephen', text: 'The old Stephen is gone. The muscles have returned. The hair has returned. The handsome has been restored.' },
+    { who: 'Narrator', text: 'Princess Nicky is rescued! The kingdom celebrates for seven days and seven nights.' },
+    { who: 'Narrator', text: 'The Swamp Thing returns to her swamp, the Human Crockpot is placed on permanent low heat, and the Undertaker is buried in a very shallow grave.' },
+    { who: 'Narrator', text: 'Stephen is crowned the greatest hero in Mythara history. And so the legend is born.' },
+  ]
+};
+
 const REWARDS = {
-  muscles: { title: 'MUSCLES RESTORED!', lines: ['Punches hit 3x harder and reach further.', 'More hearts. Faster punches.', 'The fuzzy slippers are retired. Sneakers on!'] },
-  handsome: { title: 'HANDSOME LOOKS RESTORED!', lines: ['NEW: Dazzling Smile (K / SMILE button).', 'Enemies nearby are stunned by your beauty and you heal 1 heart.', 'Even bosses swoon for a moment.'] },
-  hair: { title: 'GREAT HAIR RESTORED!', lines: ['NEW: Hair Whip (L / HAIR button) spins and smacks everything around you.', 'Aerodynamic hair: you move much faster.', 'Stephen is finally back to full glory!'] },
+  muscles: { title: 'THE FORGOTTEN BICEPS', lines: ['For the first time, Stephen feels a little stronger.', 'Sword hits 3x harder and reaches further. More hearts.', 'The fuzzy slippers are retired. Sneakers on!'] },
+  restore: { title: 'THE LEGENDARY HAIR RESTORATION', lines: ['Broader shoulders. A sharper jawline. The hair returns to its former glory!', 'NEW: Blinding Smile (K): his handsome face blinds the enemies of evil and heals 1 heart.', 'NEW: Hair Whip (L): a spinning hair attack. And flowing hair makes him faster.'] },
 };
 
 /* ---------------- scenes ---------------- */
@@ -296,16 +302,16 @@ function startLevel() {
   const c = CHAPTERS[game.chapter];
   const s = stats();
   P = { x: 160, y: 360, facing: 1, hp: s.maxHp, maxHp: s.maxHp, walk: 0, moving: false, atk: 0, atkCd: 0, inv: 60,
-        smileCd: 0, smileT: 0, hairCd: 0, spin: 0, spinHit: new Set() };
+        smileCd: 0, smileT: 0, hairCd: 0, spin: 0, spinHit: new Set(), frozenT: 0, confT: 0, slowT: 0 };
   lv = { c, phase: 'minions', spawned: 0, killed: 0, spawnT: 30, enemies: [], boss: null, proj: [], haz: [], parts: [], texts: [],
-         pickups: [], shake: 0, t: 0, banner: { text: c.title, t: 180 }, heartT: 0, endT: 0, cageOpen: 0 };
+         pickups: [], shake: 0, t: 0, banner: { text: c.title, sub: c.subtitle, t: 180 }, heartT: 0, endT: 0, ultReady: false, ultT: 0, flashFx: null };
   scene = 'level'; paused = false;
 }
 
 /* ---------------- entities ---------------- */
 const MINION = {
-  leech: { hp: 2, speed: 1.0, r: 13 },
-  frog: { hp: 3, speed: 0, r: 14 },
+  slime: { hp: 2, speed: 1.0, r: 14 },
+  bug: { hp: 3, speed: 1.8, r: 12 },
   meatball: { hp: 6, speed: 1.5, r: 14 },
   sausage: { hp: 8, speed: 1.9, r: 14 },
   zombie: { hp: 9, speed: 0.95, r: 15 },
@@ -326,7 +332,8 @@ function spawnEdgeMinion() {
 }
 
 function spawnBoss(kind) {
-  const base = { kind, x: 760, y: 340, t: 0, state: 'walk', flash: 0, stun: 0, face: -1, hidden: false, alpha: 1, sink: 0, lid: 0, dying: 0 };
+  const base = { kind, x: 760, y: 340, t: 0, state: 'walk', flash: 0, stun: 0, face: -1, hidden: false, alpha: 1, sink: 0, lid: 0, dying: 0,
+                funkCd: 300, lsCd: 0, lsUses: 0, reachLen: 0, rdir: 0, sdir: 0, foot: 0, glow: 0, heat: 0 };
   if (kind === 'swamp') Object.assign(base, { name: 'SWAMP THING', hp: 30, r: 40 });
   if (kind === 'crock') Object.assign(base, { name: 'THE HUMAN CROCKPOT', hp: 84, r: 42, vx: 0, vy: 0 });
   if (kind === 'undertaker') Object.assign(base, { name: 'THE UNDERTAKER', hp: 120, r: 30 });
@@ -338,7 +345,8 @@ function spawnBoss(kind) {
 
 function proj(x, y, ang, speed, kind) {
   const p = { x, y, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed, kind, r: 10, z: 26, life: 400, rot: 0 };
-  if (kind === 'tomb') { p.r = 16; p.z = 34; }
+  if (kind === 'breath') { p.r = 13; p.z = 30; }
+  if (kind === 'quake') { p.r = 9; p.z = 4; }
   if (kind === 'stew') { p.r = 9; }
   lv.proj.push(p);
 }
@@ -353,7 +361,7 @@ function burst(x, y, color, n = 10, spd = 3, size = 4, grav = 0.1) {
 function sparkles(x, y, n = 8, color = '#fff6a8') {
   for (let i = 0; i < n; i++) lv.parts.push({ x: x + rand(-30, 30), y: y + rand(-40, 10), vx: rand(-0.5, 0.5), vy: rand(-1.5, -0.3), life: rand(25, 50), max: 50, color, size: rand(4, 8), grav: 0, kind: 's', rot: rand(0, 3) });
 }
-const POWS = ['POW!', 'BAM!', 'WHAM!', 'BOOF!', 'SMACK!', 'THWACK!'];
+const POWS = ['SLASH!', 'CLANG!', 'SHING!', 'WHAM!', 'SWISH!', 'THWACK!'];
 function floatText(x, y, str, color = '#ffe14a', size = 20) { lv.texts.push({ x, y, str, color, size, t: 50 }); }
 
 /* ---------------- combat ---------------- */
@@ -376,10 +384,17 @@ function hitEnemy(e, dmg, fromX) {
     if (Math.random() < 0.13) lv.pickups.push({ x: e.x, y: clamp(e.y, FLOOR_TOP + 10, FLOOR_BOT), t: 0 });
   }
 }
-function hitBoss(b, dmg) {
+function hitBoss(b, dmg, ult = false) {
   if (!b || b.hidden || b.dying || b.hp <= 0) return;
   let m = 1; if (b.state === 'dizzy') m = 2;
   b.hp -= dmg * m; b.flash = 8; sfx('hit');
+  if (b.kind === 'undertaker' && !ult) {
+    if (b.hp <= b.maxHp * 0.25 && !lv.ultReady) {
+      lv.ultReady = true; sfx('power'); lv.shake = 10;
+      lv.banner = { text: 'ULTIMATE ABILITY UNLOCKED', sub: 'THE HANDSOME REVIVAL: press U' + (isTouch ? ' / tap ULT' : ''), t: 200 };
+    }
+    b.hp = Math.max(1, b.hp);
+  }
   burst(b.x, b.y - 50, '#fff', 8, 4, 3);
   if (m > 1) floatText(b.x, b.y - 110, 'x2 DIZZY!', '#ff9a3a', 22);
   else if (Math.random() < 0.4) floatText(b.x + rand(-20, 20), b.y - 100, pick(POWS));
@@ -389,7 +404,7 @@ function hitBoss(b, dmg) {
     sfx('boom'); lv.shake = 30;
   }
 }
-function minionColor(t) { return { leech: '#5a3a5a', frog: '#4caf50', meatball: '#8b4a2b', sausage: '#d0603a', zombie: '#7fae6a', bat: '#333', ghost: '#e8f0ff' }[t]; }
+function minionColor(t) { return { slime: '#7ccf2a', bug: '#3a5a2a', meatball: '#8b4a2b', sausage: '#d0603a', zombie: '#7fae6a', bat: '#333', ghost: '#e8f0ff' }[t]; }
 
 function doPunch() {
   const s = stats();
@@ -403,11 +418,16 @@ function doPunch() {
 function doSmile() {
   P.smileT = 50; P.smileCd = 420; sfx('smile');
   P.hp = Math.min(P.maxHp, P.hp + 1);
-  floatText(P.x, P.y - 90, '*DAZZLE*', '#fff6a8', 24);
+  floatText(P.x, P.y - 90, '*BLINDING SMILE*', '#fff6a8', 24);
   sparkles(P.x, P.y - 50, 20);
   for (const e of lv.enemies) if (dist(e, P) < 230) { e.stun = 160; e.kx = Math.sign(e.x - P.x) * 6; }
   const b = lv.boss;
-  if (b && !b.hidden && dist(b, P) < 300) { b.stun = 80; floatText(b.x, b.y - 130, 'swoon~', '#ff8ac8', 22); }
+  if (b && !b.hidden && dist(b, P) < 300) { b.stun = 80; floatText(b.x, b.y - 170, 'blinded!', '#ff8ac8', 22); }
+}
+function doUltimate() {
+  lv.ultT = 1; lv.ultReady = false; P.inv = 9999; sfx('smile'); sfx('power');
+  lv.proj.length = 0; lv.haz.length = 0;
+  for (const e of lv.enemies) e.hp = 0;
 }
 function doHair() {
   P.spin = 32; P.hairCd = 130; P.spinHit = new Set(); sfx('hair');
@@ -424,14 +444,19 @@ function updatePlayer() {
   if (held('arrowup', 'w')) my -= 1; if (held('arrowdown', 's')) my += 1;
   if (joy.id !== null && Math.hypot(joy.dx, joy.dy) > 0.2) { mx += joy.dx; my += joy.dy; }
   const m = Math.hypot(mx, my); if (m > 1) { mx /= m; my /= m; }
-  P.moving = m > 0.1;
+  if (P.confT > 0) { P.confT--; mx = -mx; my = -my; }
+  if (P.slowT > 0) P.slowT--;
+  if (P.frozenT > 0) { P.frozenT--; mx = my = 0; }
+  P.moving = Math.hypot(mx, my) > 0.1;
   if (P.moving) { P.walk += 0.22 * (s.speed / 2.4); if (Math.abs(mx) > 0.2) P.facing = Math.sign(mx); }
-  P.x += mx * s.speed + (P.kx || 0); P.y += my * s.speed * 0.8 + (P.ky || 0);
+  const spd = s.speed * (P.slowT > 0 ? 0.55 : 1);
+  P.x += mx * spd + (P.kx || 0); P.y += my * spd * 0.8 + (P.ky || 0);
   P.kx = (P.kx || 0) * 0.75; P.ky = (P.ky || 0) * 0.75;
   P.x = clamp(P.x, 20, W - 20); P.y = clamp(P.y, FLOOR_TOP, FLOOR_BOT);
   if (P.inv > 0) P.inv--; if (P.atk > 0) P.atk--; if (P.atkCd > 0) P.atkCd--;
   if (P.smileCd > 0) P.smileCd--; if (P.smileT > 0) P.smileT--; if (P.hairCd > 0) P.hairCd--;
-  if (lv.phase === 'bossDying' || lv.phase === 'end') return;
+  if (lv.phase === 'bossDying' || lv.ultT || P.frozenT > 0) return;
+  if (wasPressed('u', 'btn_ult') && lv.ultReady) { doUltimate(); return; }
 
   if (wasPressed(' ', 'j', 'z', 'btn_atk') && P.atkCd <= 0) { P.atk = 10; P.atkCd = s.atkCd; doPunch(); }
   if (wasPressed('k', 'x', 'btn_smile')) {
@@ -458,11 +483,7 @@ function updateEnemy(e) {
   const dx = P.x - e.x, dy = P.y - e.y, d = Math.hypot(dx, dy) || 1;
   if (Math.abs(dx) > 3) e.face = Math.sign(dx);
   switch (e.type) {
-    case 'frog':
-      if (e.hop > 0) { e.hop--; e.x += e.hvx; e.y += e.hvy; e.z = Math.sin((1 - e.hop / 26) * Math.PI) * 22; }
-      else { e.z = 0; if (e.t % 60 === 0) { e.hop = 26; const s = rand(2.8, 3.6); e.hvx = dx / d * s; e.hvy = dy / d * s * 0.8; } }
-      break;
-    case 'bat': {
+    case 'bat': case 'bug': {
       const w = Math.sin(e.t * 0.1) * 1.8;
       e.x += dx / d * e.speed - dy / d * w; e.y += dy / d * e.speed * 0.8 + dx / d * w * 0.5; e.z = 30 + Math.sin(e.t * 0.2) * 6;
       break;
@@ -481,72 +502,116 @@ function updateEnemy(e) {
     if (od > 0 && od < e.r + o.r) { const push = (e.r + o.r - od) * 0.05; e.x += ox / od * push; e.y += oy / od * push; }
   }
   e.x = clamp(e.x, -30, W + 30); e.y = clamp(e.y, FLOOR_TOP, FLOOR_BOT);
-  if (d < e.r + 14 && (e.type !== 'frog' || e.z < 10)) hurtPlayer(1, e.x, e.y);
+  if (d < e.r + 14) hurtPlayer(1, e.x, e.y);
 }
+
+function callout(b, str, color) { lv.texts.push({ x: clamp(b.x, 150, W - 150), y: Math.max(118, b.y - 240), str, color, size: 26, t: 90 }); }
+function drainPlayer(why) {
+  if (P.hp <= 0 || lv.ultT) return;
+  P.hp -= 1; sfx('hurt'); floatText(P.x, P.y - 95, why, '#ff9a5a', 18);
+  if (P.hp <= 0) { P.hp = 0; scene = 'gameover'; overT = 0; sfx('lose'); }
+}
+function segDist(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1, dy = y2 - y1, l2 = dx * dx + dy * dy || 1;
+  const k = clamp(((px - x1) * dx + (py - y1) * dy) / l2, 0, 1);
+  return Math.hypot(px - (x1 + dx * k), py - (y1 + dy * k));
+}
+function bell() { [196, 196, 147].forEach((f, i) => { tone(f, 1.2, 'triangle', 0.12, null, i * 0.5); tone(f * 2.01, 0.8, 'sine', 0.05, null, i * 0.5); }); }
 
 function updateBoss(b) {
   if (b.flash > 0) b.flash--;
   if (b.dying) { b.dying++; if (b.dying % 6 === 0) burst(b.x + rand(-30, 30), b.y - rand(10, 90), pick(['#fff', '#ffd34d', '#ff6a3a']), 6, 4, 5); return; }
+  if (lv.ultT) return;
   const rage = b.hp < b.maxHp * 0.5;
-  if (b.stun > 0) { b.stun--; if (b.stun % 15 === 0) lv.parts.push({ x: b.x + rand(-20, 20), y: b.y - 110, vx: 0, vy: -1, life: 40, max: 40, color: '#ff6fb5', size: 9, grav: 0, kind: 'h' }); return; }
+  if (b.stun > 0) { b.stun--; b.reachLen = 0; if (b.stun % 15 === 0) lv.parts.push({ x: b.x + rand(-20, 20), y: b.y - 150, vx: 0, vy: -1, life: 40, max: 40, color: '#ff6fb5', size: 9, grav: 0, kind: 'h' }); return; }
   b.t++;
   const p = P, aim = Math.atan2(p.y - b.y, p.x - b.x);
+  const done = n => { if (b.t > n) { b.state = 'walk'; b.t = 0; b.glow = 0; } };
+
   if (b.kind === 'swamp') {
+    if (b.funkCd > 0) b.funkCd--;
     switch (b.state) {
       case 'walk':
         moveToward(b, p.x, p.y, rage ? 1.3 : 0.9);
-        if (b.t > (rage ? 80 : 110)) { b.state = pick(['shoot', 'shoot', 'dive', 'stink']); b.t = 0; }
+        if (b.t > (rage ? 75 : 105)) {
+          const opts = ['breath', 'breath', 'cloud', 'cloud']; if (b.funkCd <= 0) opts.push('funk', 'funk');
+          b.state = pick(opts); b.t = 0;
+        }
         break;
-      case 'shoot': {
+      case 'breath':
         b.face = Math.sign(p.x - b.x) || 1;
-        const n = rage ? 7 : 5;
-        if (b.t === 30 || (rage && b.t === 58)) { for (let i = 0; i < n; i++) proj(b.x, b.y, aim + (i - (n - 1) / 2) * 0.22, rage ? 4.2 : 3.6, 'mud'); sfx('splat'); }
-        if (b.t > 80) { b.state = 'walk'; b.t = 0; }
-        break;
-      }
-      case 'stink':
+        if (b.t === 1) callout(b, 'SWAMP BREATH!', '#b6f04a');
+        if (b.t === 30 || (rage && b.t === 58)) {
+          const n = rage ? 7 : 5; for (let i = 0; i < n; i++) proj(b.x, b.y, aim + (i - (n - 1) / 2) * 0.2, rage ? 4 : 3.4, 'breath');
+          sfx('splat');
+        }
+        done(80); break;
+      case 'cloud':
+        if (b.t === 1) callout(b, 'TOXIC CLOUD!', '#b6f04a');
         if (b.t === 15) {
           const n = rage ? 4 : 2;
-          floatText(b.x, b.y - 170, 'P-U!!', '#b6f04a', 24);
           for (let i = 0; i < n; i++) hazard(clamp(p.x + (i ? rand(-170, 170) : 0), 40, W - 40), clamp(p.y + (i ? rand(-100, 100) : 0), FLOOR_TOP, FLOOR_BOT), 50, 'stink', 45 + i * 10, 90, 25);
         }
-        if (b.t > 60) { b.state = 'walk'; b.t = 0; }
-        break;
-      case 'dive':
-        if (b.t <= 30) b.sink = b.t / 30;
-        if (b.t === 30) {
-          b.hidden = true;
-          b.x = clamp(p.x + rand(-30, 30), 80, W - 80); b.y = clamp(p.y + rand(-20, 20), FLOOR_TOP + 30, FLOOR_BOT - 10);
-          hazard(b.x, b.y, 52, 'puddle', 50, 12, 10);
+        done(60); break;
+      case 'funk':
+        if (b.t === 1) { callout(b, 'THE FUNK BOMB!', '#e6ff3a'); sfx('boss'); }
+        b.glow = Math.min(1, b.t / 70);
+        if (b.t === 70 || b.t === 88) {
+          const n = rage ? 18 : 14, off = b.t === 88 ? Math.PI / n : 0;
+          for (let i = 0; i < n; i++) proj(b.x, b.y, off + i / n * TAU, 3, 'breath');
+          if (b.t === 70) {
+            lv.shake = 20; sfx('boom'); lv.flashFx = { color: '150,230,40', t: 30 };
+            for (const e of lv.enemies) if (e.hp > 0) { e.hp = 0; burst(e.x, e.y - 10, '#9c3', 8); }
+            floatText(b.x, b.y - 160, 'Battlefield... cleared.', '#e6ff3a', 18);
+          }
         }
-        if (b.t === 80) {
-          b.hidden = false; lv.shake = 12; sfx('splat');
-          const n = rage ? 12 : 8; for (let i = 0; i < n; i++) proj(b.x, b.y, i / n * TAU, 3.2, 'mud');
-        }
-        if (b.t > 80) b.sink = Math.max(0, 1 - (b.t - 80) / 20);
-        if (b.t >= 110) { b.sink = 0; b.state = 'walk'; b.t = 0; }
-        break;
+        if (b.t > 90) { b.funkCd = 420; b.glow = 0; }
+        done(100); break;
     }
-    if (!b.hidden && b.sink < 0.6 && dist(b, p) < b.r + 14) hurtPlayer(1, b.x, b.y);
+    if (dist(b, p) < b.r + 14) hurtPlayer(1, b.x, b.y);
   }
   else if (b.kind === 'crock') {
+    if (b.lsCd > 0) b.lsCd--;
     switch (b.state) {
       case 'walk':
         b.lid = Math.max(0, b.lid - 1);
         moveToward(b, p.x, p.y, rage ? 1.3 : 0.9);
-        if (b.t > (rage ? 75 : 100)) { b.state = pick(['ring', 'charge', 'charge', 'steam']); b.t = 0; }
-        break;
-      case 'ring': {
-        b.lid = b.t < 20 ? b.t : Math.max(0, 20 - (b.t - 50));
-        const n = rage ? 14 : 10;
-        if (b.t === 25 || (rage && b.t === 50)) {
-          const off = b.t === 50 ? Math.PI / n : 0;
-          for (let i = 0; i < n; i++) proj(b.x, b.y - 10, off + i / n * TAU, 3.1, i % 2 ? 'spice' : 'stew');
-          sfx('splat'); for (let i = 0; i < 6; i++) lv.parts.push({ x: b.x + rand(-20, 20), y: b.y - 90, vx: rand(-0.4, 0.4), vy: -1.2, life: 50, max: 50, color: 'rgba(255,255,255,0.7)', size: 10, grav: -0.01, kind: 'c' });
+        if (b.t > (rage ? 75 : 100)) {
+          const opts = ['slow', 'pressure', 'season', 'season', 'charge', 'charge'];
+          if (b.hp < b.maxHp * 0.7 && b.lsCd <= 0 && b.lsUses < 2) opts.push('lowslow', 'lowslow');
+          b.state = pick(opts); b.t = 0;
         }
-        if (b.t > 75) { b.state = 'walk'; b.t = 0; }
         break;
-      }
+      case 'slow':
+        if (b.t === 1) callout(b, 'SLOW COOK!', '#ff7a3a');
+        moveToward(b, p.x, p.y, 0.45);
+        b.heat = b.t < 30 ? 0 : 1;
+        if (b.t >= 30 && dist(b, p) < 170 && (b.t - 30) % 55 === 54) drainPlayer('slow cooked...');
+        if (b.t > 200) b.heat = 0;
+        done(200); break;
+      case 'pressure':
+        if (b.t === 1) callout(b, 'PRESSURE RELEASE!', '#ffffff');
+        b.lid = b.t < 20 ? b.t : Math.max(0, 20 - (b.t - 50));
+        if (b.t === 10) {
+          const n = rage ? 5 : 3;
+          hazard(clamp(p.x, 40, W - 40), clamp(p.y, FLOOR_TOP, FLOOR_BOT), 46, 'steam', 45, 60);
+          for (let i = 1; i < n; i++) hazard(clamp(p.x + rand(-160, 160), 40, W - 40), clamp(p.y + rand(-100, 100), FLOOR_TOP, FLOOR_BOT), 46, 'steam', 45 + i * 8, 60);
+        }
+        if (b.t === 30 || (rage && b.t === 55)) {
+          const n = rage ? 14 : 10, off = b.t === 55 ? Math.PI / n : 0;
+          for (let i = 0; i < n; i++) proj(b.x, b.y - 10, off + i / n * TAU, 3.1, 'stew');
+          sfx('boom'); lv.shake = 8;
+          for (let i = 0; i < 8; i++) lv.parts.push({ x: b.x + rand(-25, 25), y: b.y - 100, vx: rand(-0.6, 0.6), vy: -1.6, life: 50, max: 50, color: 'rgba(255,255,255,0.75)', size: 12, grav: -0.01, kind: 'c' });
+        }
+        done(80); break;
+      case 'season':
+        b.face = Math.sign(p.x - b.x) || 1;
+        if (b.t === 1) callout(b, 'EXTRA SEASONING!', '#e0a050');
+        if (b.t === 20 || b.t === 40 || (rage && b.t === 60)) {
+          for (let i = -1; i <= 1; i++) proj(b.x, b.y - 10, aim + i * 0.25, 3.8, 'spice');
+          sfx('punch');
+        }
+        done(80); break;
       case 'charge':
         if (b.t < 40) { b.cdir = aim; b.face = Math.sign(p.x - b.x) || 1; }
         if (b.t === 45) sfx('boss');
@@ -563,18 +628,12 @@ function updateBoss(b) {
         }
         break;
       case 'dizzy':
-        if (b.t > (rage ? 70 : 95)) { b.state = 'walk'; b.t = 0; }
-        break;
-      case 'steam': {
-        b.lid = Math.min(12, b.t);
-        if (b.t === 10) {
-          const n = rage ? 5 : 3;
-          hazard(clamp(p.x, 40, W - 40), clamp(p.y, FLOOR_TOP, FLOOR_BOT), 46, 'steam', 45, 60);
-          for (let i = 1; i < n; i++) hazard(clamp(p.x + rand(-160, 160), 40, W - 40), clamp(p.y + rand(-100, 100), FLOOR_TOP, FLOOR_BOT), 46, 'steam', 45 + i * 8, 60);
-        }
-        if (b.t > 60) { b.state = 'walk'; b.t = 0; }
-        break;
-      }
+        done(rage ? 70 : 95); break;
+      case 'lowslow':
+        if (b.t === 1) { callout(b, 'LOW AND SLOW!', '#ff9a3a'); floatText(clamp(b.x, 150, W - 150), Math.max(140, b.y - 214), '(this battle may take 12 hours)', '#fff', 15); b.lsUses = (b.lsUses || 0) + 1; }
+        if (b.t % 6 === 0 && b.t <= 60) { b.hp = Math.min(b.maxHp, b.hp + 1); lv.parts.push({ x: b.x + rand(-25, 25), y: b.y - 90, vx: 0, vy: -1.2, life: 40, max: 40, color: 'rgba(255,255,255,0.7)', size: 10, grav: 0, kind: 'c' }); }
+        if (b.t > 60) b.lsCd = 600;
+        done(75); break;
     }
     b.x = clamp(b.x, 50, W - 50); b.y = clamp(b.y, FLOOR_TOP + 15, FLOOR_BOT - 5);
     if (b.state !== 'dizzy' && dist(b, p) < b.r + 14) hurtPlayer(b.state === 'charge' ? 2 : 1, b.x, b.y);
@@ -583,45 +642,51 @@ function updateBoss(b) {
     const minions = lv.enemies.filter(e => e.hp > 0).length;
     switch (b.state) {
       case 'walk':
-        b.alpha = 1;
-        moveToward(b, p.x, p.y, rage ? 1.5 : 1.1);
+        b.reachLen = 0; b.foot = 0;
+        moveToward(b, p.x, p.y, rage ? 1.4 : 1.05);
         if (b.t > (rage ? 70 : 95)) {
-          const opts = ['tomb', 'tomb', 'teleport', 'teleport']; if (minions < 3) opts.push('summon', 'summon');
+          const opts = ['stare', 'reach', 'reach', 'stomp', 'stomp']; if (minions < 3) opts.push('bell');
           b.state = pick(opts); b.t = 0;
         }
         break;
-      case 'tomb':
-        b.face = Math.sign(p.x - b.x) || 1;
-        if (b.t === 20 || b.t === 45 || (rage && b.t === 70)) { proj(b.x, b.y, aim, rage ? 4.2 : 3.6, 'tomb'); sfx('punch'); }
-        if (b.t > 90) { b.state = 'walk'; b.t = 0; }
-        break;
-      case 'summon':
-        if (b.t === 30) {
+      case 'stare':
+        if (b.t === 1) callout(b, 'GRAVEYARD STARE!', '#c69bff');
+        if (b.t < 30) { b.sdir = aim; b.face = Math.sign(p.x - b.x) || 1; }
+        if (b.t === 55) {
+          let da = Math.abs(Math.atan2(p.y - b.y, p.x - b.x) - b.sdir); if (da > Math.PI) da = TAU - da;
+          if (da < 0.42 && dist(b, p) < 560 && P.inv <= 0) { P.frozenT = 80; sfx('hurt'); floatText(P.x, P.y - 100, 'FROZEN WITH FEAR!', '#c69bff', 20); }
+        }
+        done(80); break;
+      case 'reach':
+        if (b.t === 1) { callout(b, 'THE LONG REACH!', '#c69bff'); floatText(clamp(b.x, 150, W - 150), Math.max(140, b.y - 214), '(from three business days away)', '#fff', 14); }
+        if (b.t < 35) { b.rdir = aim; b.face = Math.sign(p.x - b.x) || 1; }
+        if (b.t >= 45 && b.t < 55) b.reachLen = (b.t - 44) * 75;
+        if (b.t >= 55 && b.t < 62) {
+          const hx = b.x + Math.cos(b.rdir) * b.reachLen, hy = b.y + Math.sin(b.rdir) * b.reachLen;
+          if (segDist(p.x, p.y, b.x, b.y, hx, hy) < 28) hurtPlayer(1, hx, hy);
+        }
+        if (b.t === 45) sfx('hair');
+        if (b.t >= 62) b.reachLen = Math.max(0, b.reachLen - 70);
+        done(80); break;
+      case 'stomp':
+        if (b.t === 1) callout(b, 'TOE-LESS TERROR!', '#c69bff');
+        b.foot = b.t < 30 ? b.t / 30 : 0;
+        if (b.t === 30 || (rage && b.t === 58)) {
+          const n = rage ? 16 : 12, off = b.t === 58 ? Math.PI / n : 0;
+          for (let i = 0; i < n; i++) proj(b.x, b.y, off + i / n * TAU, 3.4, 'quake');
+          lv.shake = 16; sfx('boom'); burst(b.x, b.y, '#6b5a4a', 14, 4, 5);
+        }
+        done(85); break;
+      case 'bell':
+        if (b.t === 1) { callout(b, 'THE FINAL BELL!', '#c69bff'); bell(); }
+        if (b.t === 40) {
           const n = rage ? 3 : 2;
-          for (let i = 0; i < n; i++) { const z = spawnMinion('zombie', clamp(b.x + rand(-140, 140), 40, W - 40), clamp(b.y + rand(-80, 80), FLOOR_TOP + 10, FLOOR_BOT), false); z.rise = 40; burst(z.x, z.y, '#5a4a3a', 10, 2, 4); }
-          sfx('boss');
+          for (let i = 0; i < n; i++) { const g = spawnMinion('ghost', clamp(b.x + rand(-160, 160), 40, W - 40), clamp(b.y + rand(-90, 90), FLOOR_TOP + 10, FLOOR_BOT), false); g.rise = 30; burst(g.x, g.y - 20, '#e8f0ff', 10, 2, 4); }
         }
-        if (b.t > 70) { b.state = 'walk'; b.t = 0; }
-        break;
-      case 'teleport':
-        if (b.t <= 20) { b.alpha = 1 - b.t / 20; b.hidden = b.t > 10; }
-        if (b.t === 20) {
-          const side = p.facing; b.x = clamp(p.x - side * 110, 60, W - 60); b.y = clamp(p.y + rand(-20, 20), FLOOR_TOP + 20, FLOOR_BOT - 5);
-          b.face = Math.sign(p.x - b.x) || 1;
-        }
-        if (b.t > 20) { b.alpha = Math.min(1, (b.t - 20) / 15); b.hidden = b.alpha < 0.5; }
-        if (b.t >= 35) { b.state = 'slam'; b.t = 0; b.alpha = 1; b.hidden = false; }
-        break;
-      case 'slam':
-        if (b.t === 5) {
-          hazard(p.x, p.y, 40, 'coffin', 50, 10, 30);
-          if (rage) { hazard(clamp(p.x + rand(-140, 140), 40, W - 40), clamp(p.y + rand(-90, 90), FLOOR_TOP, FLOOR_BOT), 40, 'coffin', 62, 10, 30); hazard(clamp(p.x + rand(-140, 140), 40, W - 40), clamp(p.y + rand(-90, 90), FLOOR_TOP, FLOOR_BOT), 40, 'coffin', 74, 10, 30); }
-        }
-        if (b.t > 80) { b.state = 'walk'; b.t = 0; }
-        break;
+        done(80); break;
     }
     b.x = clamp(b.x, 50, W - 50); b.y = clamp(b.y, FLOOR_TOP + 15, FLOOR_BOT - 5);
-    if (!b.hidden && dist(b, p) < b.r + 14) hurtPlayer(1, b.x, b.y);
+    if (dist(b, p) < b.r + 14) hurtPlayer(1, b.x, b.y);
   }
 }
 
@@ -649,15 +714,14 @@ function updateLevel() {
       if (c.boss) {
         lv.proj.length = 0; lv.haz.length = 0;
         startStory(Object.assign({ bg: c.theme }, c.bossIntro), () => { scene = 'level'; lv.phase = 'boss'; spawnBoss(c.boss); });
-      } else {
-        lv.phase = 'end'; lv.endT = 0; sfx('power');
       }
     }
   }
-  if (lv.phase === 'end') {
-    lv.endT++; lv.cageOpen = Math.min(1, lv.endT / 60);
-    if (lv.endT % 5 === 0) sparkles(480, 200, 3);
-    if (lv.endT === 120) startStory(Object.assign({ bg: 'tower' }, lv.c.outro), () => { scene = 'victory'; overT = 0; clearSave(); sfx('win'); });
+  if (lv.flashFx && --lv.flashFx.t <= 0) lv.flashFx = null;
+  if (lv.ultT) {
+    lv.ultT++;
+    if (lv.ultT % 3 === 0) sparkles(P.x, P.y - 60, 3);
+    if (lv.ultT === 70 && lv.boss) { lv.boss.stun = 0; hitBoss(lv.boss, 99999, true); }
   }
 
   for (const e of lv.enemies) if (e.hp > 0) updateEnemy(e);
@@ -670,8 +734,9 @@ function updateLevel() {
     if (b.dying > 110) {
       const c = lv.c; lv.boss = null; lv.phase = 'done';
       startStory(Object.assign({ bg: c.theme }, c.outro), () => {
+        if (!c.reward) { startStory(ENDING, () => { scene = 'victory'; overT = 0; clearSave(); sfx('win'); }); return; }
         const before = Object.assign({}, game.look);
-        game.look[c.reward] = true;
+        if (c.reward === 'restore') { game.look.handsome = true; game.look.hair = true; } else game.look[c.reward] = true;
         reward = { kind: c.reward, before, after: Object.assign({}, game.look), t: 0 };
         scene = 'reward'; sfx('power');
       });
@@ -681,7 +746,13 @@ function updateLevel() {
 
   for (const p of lv.proj) {
     p.x += p.vx; p.y += p.vy; p.life--; p.rot += 0.15;
-    if (dist(p, P) < p.r + 12) { hurtPlayer(1, p.x, p.y); p.life = 0; burst(p.x, p.y - p.z, p.kind === 'mud' ? '#4a6a2a' : p.kind === 'stew' ? '#a33d12' : p.kind === 'spice' ? '#a0662a' : '#888', 6); }
+    if (dist(p, P) < p.r + 12 && P.inv <= 0) {
+      hurtPlayer(1, p.x, p.y); p.life = 0;
+      burst(p.x, p.y - p.z, { breath: '#9c3', stew: '#a33d12', spice: '#a0662a', quake: '#6b5a4a' }[p.kind] || '#888', 6);
+      if (p.kind === 'breath') { P.slowT = 150; floatText(P.x, P.y - 110, 'MORALE: ZERO', '#b6f04a', 18); }
+      if (p.kind === 'spice') { P.confT = 180; floatText(P.x, P.y - 110, 'CONFUSED & NAUSEOUS!', '#e0a050', 18); }
+      if (p.kind === 'quake') { P.slowT = 90; floatText(P.x, P.y - 110, 'TERRIFIED!', '#c69bff', 18); }
+    }
     if (p.x < -40 || p.x > W + 40 || p.y < FLOOR_TOP - 60 || p.y > H + 30) p.life = 0;
   }
   lv.proj = lv.proj.filter(p => p.life > 0);
@@ -779,6 +850,7 @@ function drawStephen(x, y, f, L, o = {}) {
     line(sx, sy, ex, ey, c, armW);
     if (M) { ell(sx + (ex - sx) * 0.4, sy + (ey - sy) * 0.4, 6.5, 5, c, Math.atan2(ey - sy, ex - sx)); }
     circ(ex, ey, M ? 5.5 : 3.5, c);
+    return [ex, ey];
   };
   // back arm
   if (M) arm(-13, -47, -0.3 - sw * 0.5, false, true); else arm(-3 + sl * 0.5, -46, -sw + 0.15, false, true);
@@ -845,7 +917,20 @@ function drawStephen(x, y, f, L, o = {}) {
     for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(hx - 9, hy - 3 - i * 2); ctx.quadraticCurveTo(hx - 2, hy - 14 - i, hx + 7, hy - 8 - i * 1.5); ctx.stroke(); }
   }
   // front arm
-  if (M) arm(13, -47, 0.3 + sw * 0.5, o.atk > 0, false); else arm(4 + sl * 0.5, -46, sw - 0.1, o.atk > 0, false);
+  const hand = M ? arm(13, -47, 0.3 + sw * 0.5, o.atk > 0, false) : arm(4 + sl * 0.5, -46, sw - 0.1, o.atk > 0, false);
+  if (!o.noSword) {
+    const leg = HR, sa = o.atk > 0 ? 0.05 : -1.05, len = leg ? 34 : 26;
+    ctx.save(); ctx.translate(hand[0], hand[1]); ctx.rotate(sa);
+    if (leg) { ctx.shadowColor = '#bfe4ff'; ctx.shadowBlur = 10; }
+    poly([4, -2.4, len, -1.2, len + 5, 0, len, 1.2, 4, 2.4], leg ? '#eaf6ff' : '#8f8578');
+    ctx.shadowBlur = 0;
+    if (leg) line(6, 0, len - 2, 0, '#9ccfff', 1); else { circ(12, 0.5, 1.6, '#9a4a20'); circ(19, -0.6, 1.3, '#a0522d'); circ(24, 0.4, 1.1, '#8a4a20'); }
+    line(3, -6, 3, 6, leg ? '#ffd34d' : '#5a4a3a', 3);
+    line(-5, 0, 2, 0, leg ? '#7a3e14' : '#4a3a2a', 3.5);
+    circ(-6, 0, 2.4, leg ? '#ffd34d' : '#5a4a3a');
+    ctx.restore();
+  }
+  if (o.crown) { const cy = hy - (HR ? 30 : 16); poly([hx - 11, cy, hx - 11, cy - 11, hx - 5, cy - 5, hx, cy - 13, hx + 5, cy - 5, hx + 11, cy - 11, hx + 11, cy], '#ffcc00'); circ(hx, cy - 4, 2, '#e0306a'); }
   ctx.restore();
 
   if (o.spin) {
@@ -1031,8 +1116,15 @@ function drawUndertaker(x, y, o = {}) {
   const walk = o.walk ? Math.sin(t * 0.15) * 5 : 0;
   if (o.raise) circ(0, -80, 70, `rgba(170,80,255,${0.12 + Math.sin(t * 0.3) * 0.06})`);
   // legs
-  line(-8, -40, -9 - walk, -2, '#101012', 10); line(8, -40, 9 + walk, -2, '#101012', 10);
-  ell(-7 - walk, -1, 10, 4, '#050505'); ell(11 + walk, -1, 10, 4, '#050505');
+  line(-8, -40, -9 - walk, -2, '#101012', 10); ell(-7 - walk, -1, 10, 4, '#050505');
+  if (o.foot > 0) {
+    const fy = -4 - o.foot * 26;
+    line(8, -40, 14, fy, '#101012', 10);
+    ell(22, fy, 15, 7, skin); ell(22, fy + 2, 12, 4, skinD);
+    circ(35, fy - 4, 4, skin); circ(36, fy + 2, 3.5, skin);
+    line(25, fy - 5, 26, fy - 3, '#7a6a5a', 1); line(26, fy + 4, 27, fy + 2, '#7a6a5a', 1);
+    for (let i = 0; i < 3; i++) { const a = frame * 0.2 + i * 2; line(34 + Math.cos(a) * 3, fy - 10 + i * 6, 40 + Math.cos(a) * 3, fy - 12 + i * 6, 'rgba(160,200,80,0.7)', 1.5); }
+  } else { line(8, -40, 9 + walk, -2, '#101012', 10); ell(11 + walk, -1, 10, 4, '#050505'); }
   // back arm
   const up = o.raise ? -40 : 0;
   line(-20, -96, -30, -58 + up + walk * 0.4, coat, 11);
@@ -1065,12 +1157,20 @@ function drawUndertaker(x, y, o = {}) {
   ctx.fillStyle = C('#0d0d0f'); ctx.beginPath(); ctx.moveTo(-15, -138); ctx.quadraticCurveTo(-16, -160, 0, -160); ctx.quadraticCurveTo(16, -160, 15, -138); ctx.fill();
   line(-14, -142, 14, -142, '#26262c', 3);
   // front arm reaching out with big gloved hand
-  const reach = o.throwing ? 14 : 0;
-  const hx = o.raise ? 30 : 42 + reach, hy = o.raise ? -128 : -92 - reach * 0.3;
-  line(20, -98, hx - 4, hy + 2, coat, 11);
-  circ(hx, hy, 8, glove);
-  for (let i = 0; i < 4; i++) { const a = -0.9 + i * 0.5; line(hx + Math.cos(a) * 5, hy + Math.sin(a) * 5, hx + Math.cos(a) * 15, hy + Math.sin(a) * 15, glove, 4.5); }
-  line(hx - 2, hy + 6, hx + 6, hy + 13, glove, 4.5);
+  if (!o.reaching) {
+    const hx = o.raise ? 30 : 42, hy = o.raise ? -128 : -92;
+    line(20, -98, hx - 4, hy + 2, coat, 11);
+    if (o.raise) {
+      const sw2 = Math.sin(frame * 0.3) * 0.5;
+      ctx.save(); ctx.translate(hx, hy - 6); ctx.rotate(sw2);
+      line(0, 0, 0, -10, '#5a4030', 3);
+      ctx.fillStyle = '#c8a040'; ctx.beginPath(); ctx.moveTo(-6, -10); ctx.quadraticCurveTo(-7, -26, 0, -27); ctx.quadraticCurveTo(7, -26, 6, -10); ctx.lineTo(10, -6); ctx.lineTo(-10, -6); ctx.fill();
+      ctx.restore();
+    }
+    circ(hx, hy, 8, glove);
+    for (let i = 0; i < 4; i++) { const a = -0.9 + i * 0.5; line(hx + Math.cos(a) * 5, hy + Math.sin(a) * 5, hx + Math.cos(a) * 15, hy + Math.sin(a) * 15, glove, 4.5); }
+    line(hx - 2, hy + 6, hx + 6, hy + 13, glove, 4.5);
+  } else line(20, -98, 34, -100, coat, 11);
   ctx.restore();
 }
 
@@ -1084,17 +1184,14 @@ function drawMinion(e) {
   const fl = e.flash > 0 && e.flash % 2 === 0;
   const C = (c) => fl ? '#fff' : c;
   switch (e.type) {
-    case 'leech':
-      for (let i = 0; i < 4; i++) circ(-12 + i * 7, -7 - Math.abs(Math.sin(t * 0.2 + i)) * 3, 7 - Math.abs(i - 2), C('#5a3a5a'));
-      circ(10, -9, 6, C('#6e4a6e')); circ(13, -12, 1.8, '#ff0'); circ(15, -6, 2.5, '#2a0a1a');
+    case 'slime': {
+      const sq = Math.sin(t * 0.18);
+      ctx.fillStyle = C('rgba(124,207,42,0.9)'); ctx.beginPath(); ctx.ellipse(0, -11 - sq * 2, 15 + sq * 2, 11 - sq * 2, 0, Math.PI, 0); ctx.lineTo(15 + sq * 2, 0); ctx.lineTo(-15 - sq * 2, 0); ctx.fill();
+      ell(-5, -14, 4, 3, 'rgba(255,255,255,0.4)');
+      circ(2, -12, 3.2, '#fff'); circ(9, -12, 3.2, '#fff'); circ(3, -12, 1.6, '#111'); circ(10, -12, 1.6, '#111');
+      ell(-12, 0, 3, 1.5, C('#5a9a1a')); ell(13, 0, 4, 1.5, C('#5a9a1a'));
       break;
-    case 'frog':
-      ell(0, -10, 15, 11, C('#4caf50')); ell(2, -6, 10, 6, C('#a5d6a7'));
-      circ(-5, -20, 5, C('#4caf50')); circ(7, -20, 5, C('#4caf50'));
-      circ(-5, -21, 2.5, '#111'); circ(7, -21, 2.5, '#111');
-      line(4, -9, 12, -9, '#1b5e20', 1.5);
-      line(-12, -3, -16, 0, C('#388e3c'), 4); line(10, -3, 14, 0, C('#388e3c'), 4);
-      break;
+    }
     case 'meatball':
       circ(0, -14, 14 * (1 + Math.sin(t * 0.3) * 0.03), C('#8b4a2b'));
       ell(0, -24, 11, 6, C('#c62828')); circ(-4, -9, 2, '#6a3a1b'); circ(6, -16, 2, '#6a3a1b');
@@ -1118,6 +1215,14 @@ function drawMinion(e) {
       circ(4, -52, 2.6, '#fff'); circ(4.5, -52, 1, '#c00'); circ(-2, -51, 1.6, '#222');
       line(0, -44, 7, -45, '#2a3a1a', 1.5);
       poly([-9, -56, -4, -62, 2, -58, 8, -61, 9, -55], '#3a2a1a');
+      break;
+    }
+    case 'bug': {
+      const wf = Math.sin(t * 1.2) * 6;
+      ell(-4, -12 - wf * 0.5, 10, 4, 'rgba(220,255,220,0.6)', -0.5); ell(4, -12 + wf * 0.5, 10, 4, 'rgba(220,255,220,0.6)', 0.5);
+      ell(-4, -4, 10, 6, C('#3a5a2a')); ell(-8, -4, 4, 4, C('#5a8a2a'));
+      circ(7, -5, 6, C('#2a3a1a')); circ(9, -8, 3, '#e33'); circ(5, -9, 2.4, '#e33');
+      line(-2, 0, -5, 5, '#111', 1.5); line(2, 0, 2, 6, '#111', 1.5); line(12, -3, 16, 0, '#111', 1.5);
       break;
     }
     case 'bat': {
@@ -1255,7 +1360,7 @@ function drawHud() {
     heart(hx, hy + 1, 19, i < P.hp ? '#ff3e5f' : '#4a3a42');
   }
   const ab = [
-    { k: 'J', name: 'PUNCH', on: true, cd: P.atkCd / s.atkCd },
+    { k: 'J', name: 'SWORD', on: true, cd: P.atkCd / s.atkCd },
     { k: 'K', name: 'SMILE', on: game.look.handsome, cd: P.smileCd / 420 },
     { k: 'L', name: 'HAIR', on: game.look.hair, cd: P.hairCd / 130 },
   ];
@@ -1286,7 +1391,8 @@ function drawHud() {
 function drawTouch() {
   if (!isTouch) return;
   for (const b of BTNS) {
-    const on = b.id === 'atk' || (b.id === 'smile' && game.look.handsome) || (b.id === 'hair' && game.look.hair);
+    if (b.id === 'ult' && !lv.ultReady) continue;
+    const on = b.id === 'atk' || b.id === 'ult' || (b.id === 'smile' && game.look.handsome) || (b.id === 'hair' && game.look.hair);
     circ(b.x, b.y, b.r, on ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)');
     ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, TAU); ctx.stroke();
     text(b.label, b.x, b.y, 14, on ? '#fff' : '#777');
@@ -1303,9 +1409,15 @@ function drawBossEntity(b) {
   const o = { s: 1.15, face: b.face, flash: bossFlash(b), stun: b.stun > 0 };
   if (b.dying) { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - b.dying / 110); o.flash = b.dying % 8 < 4; }
   if (b.kind === 'swamp') {
-    if (b.hidden) { /* only hazard puddle visible */ }
-    else drawSwamp(b.x, b.y, Object.assign(o, { sink: b.sink }));
+    if (b.glow > 0) { circ(b.x, b.y - 70, 60 + b.glow * 50 + Math.sin(frame * 0.6) * 6, `rgba(170,240,40,${0.15 + b.glow * 0.25})`); }
+    drawSwamp(b.x, b.y, Object.assign(o, { sink: b.sink }));
   } else if (b.kind === 'crock') {
+    if (b.state === 'slow') {
+      ctx.save(); ctx.lineWidth = 4;
+      if (b.heat) { ell(b.x, b.y, 170, 100, `rgba(255,90,30,${0.12 + 0.06 * Math.sin(frame * 0.2)})`); ctx.strokeStyle = 'rgba(255,120,40,0.7)'; }
+      else { ctx.strokeStyle = `rgba(255,90,30,${0.4 + 0.4 * Math.sin(frame * 0.4)})`; ctx.setLineDash([10, 8]); }
+      ctx.beginPath(); ctx.ellipse(b.x, b.y, 170, 100, 0, 0, TAU); ctx.stroke(); ctx.restore();
+    }
     drawCrock(b.x, b.y, Object.assign(o, { lid: b.lid, dizzy: b.state === 'dizzy', charging: b.state === 'charge' && b.t < 45, walk: b.state === 'walk' || b.state === 'charge' }));
     if (b.state === 'charge' && b.t < 45 && !b.stun) {
       ctx.save(); ctx.globalAlpha = 0.3 + 0.3 * Math.sin(frame * 0.5); ctx.strokeStyle = '#ff3a2a'; ctx.lineWidth = 6; ctx.setLineDash([12, 10]);
@@ -1313,7 +1425,24 @@ function drawBossEntity(b) {
       text('!', b.x, b.y - 195, 34, '#ff3a2a', 'center', 'bold', '#000');
     }
   } else if (b.kind === 'undertaker') {
-    drawUndertaker(b.x, b.y, Object.assign(o, { alpha: b.alpha, walk: b.state === 'walk', raise: b.state === 'summon', throwing: b.state === 'tomb' && (b.t % 25) < 10 }));
+    if (b.state === 'stare' && !b.stun) {
+      const fire = b.t >= 55 && b.t < 70, warm = b.t < 55;
+      ctx.save(); ctx.fillStyle = fire ? 'rgba(190,120,255,0.35)' : `rgba(190,120,255,${0.08 + 0.08 * Math.sin(frame * 0.4)})`;
+      ctx.beginPath(); ctx.moveTo(b.x, b.y - 140); ctx.arc(b.x, b.y - 140, 600, b.sdir - 0.42, b.sdir + 0.42); ctx.closePath(); ctx.fill(); ctx.restore();
+      if (warm) text('!', b.x, b.y - 215, 34, '#c69bff', 'center', 'bold', '#000');
+    }
+    if (b.state === 'reach' && b.t < 45 && !b.stun) {
+      ctx.save(); ctx.globalAlpha = 0.3 + 0.3 * Math.sin(frame * 0.5); ctx.strokeStyle = '#c69bff'; ctx.lineWidth = 8; ctx.setLineDash([12, 10]);
+      ctx.beginPath(); ctx.moveTo(b.x, b.y - 30); ctx.lineTo(b.x + Math.cos(b.rdir) * 750, b.y - 30 + Math.sin(b.rdir) * 750); ctx.stroke(); ctx.restore();
+    }
+    drawUndertaker(b.x, b.y, Object.assign(o, { alpha: b.alpha, walk: b.state === 'walk', raise: b.state === 'bell', foot: b.foot, reaching: b.reachLen > 0 }));
+    if (b.reachLen > 0) {
+      const sx = b.x + b.face * 30, sy = b.y - 100, hx = b.x + Math.cos(b.rdir) * b.reachLen, hy = b.y - 30 + Math.sin(b.rdir) * b.reachLen;
+      line(sx, sy, hx, hy, '#18181c', 12);
+      ctx.save(); ctx.translate(hx, hy); ctx.rotate(Math.atan2(hy - sy, hx - sx));
+      circ(0, 0, 11, '#2a2522'); for (let i = 0; i < 4; i++) line(4, -8 + i * 5, 18, -10 + i * 6, '#2a2522', 5); line(0, 8, 10, 14, '#2a2522', 5);
+      ctx.restore();
+    }
   }
   if (b.dying) ctx.restore();
 }
@@ -1324,11 +1453,8 @@ function drawProj(p) {
   if (p.kind === 'mud') { circ(p.x, y, p.r, '#4a5a22'); circ(p.x - 3, y - 3, p.r * 0.4, '#6a7a3a'); }
   else if (p.kind === 'stew') { circ(p.x, y, p.r, '#b8451a'); circ(p.x + 2, y - 2, 3, '#e07030'); circ(p.x - 3, y + 2, 2, '#5a8a2a'); }
   else if (p.kind === 'spice') { for (let i = 0; i < 7; i++) circ(p.x + Math.cos(p.rot + i) * (3 + i % 3 * 2.5), y + Math.sin(p.rot * 1.3 + i * 2) * (3 + i % 3 * 2.5), 2, i % 2 ? '#a0662a' : '#d2452a'); }
-  else if (p.kind === 'tomb') {
-    ctx.save(); ctx.translate(p.x, y); ctx.rotate(p.rot);
-    ctx.fillStyle = '#7a7a8a'; ctx.beginPath(); ctx.roundRect(-12, -16, 24, 30, [12, 12, 2, 2]); ctx.fill();
-    text('RIP', 0, -2, 9, '#333'); ctx.restore();
-  }
+  else if (p.kind === 'breath') { for (let i = 0; i < 3; i++) circ(p.x + Math.cos(p.rot + i * 2.1) * 5, y + Math.sin(p.rot + i * 2.1) * 4, p.r * 0.75, 'rgba(150,225,40,0.55)'); fly(p.x + Math.cos(p.rot * 2) * 9, y - 8, frame); }
+  else if (p.kind === 'quake') { ctx.save(); ctx.translate(p.x, y); ctx.rotate(p.rot); poly([-8, 4, -5, -6, 3, -8, 9, -1, 5, 6], '#6b5a4a'); ctx.restore(); circ(p.x - p.vx * 3, y + 2, 5, 'rgba(140,120,100,0.4)'); }
 }
 function drawHazard(h) {
   const warn = h.t < h.warn, act = h.t >= h.warn && h.t < h.warn + h.active;
@@ -1373,7 +1499,6 @@ function renderLevel() {
 
   // depth sorted drawables
   const list = [];
-  if (lv.c.theme === 'tower') list.push({ y: 200, d: () => { drawNicky(480, 200, { s: 1.3, help: lv.phase !== 'end', happy: lv.phase === 'end' }); drawCage(480, 200, lv.cageOpen); } });
   for (const e of lv.enemies) list.push({ y: e.y, d: () => drawMinion(e) });
   if (lv.boss) list.push({ y: lv.boss.y, d: () => drawBossEntity(lv.boss) });
   for (const h of lv.haz) if (h.kind === 'coffin' && h.t >= h.warn) list.push({ y: h.y, d: () => drawHazard(h) });
@@ -1381,7 +1506,17 @@ function renderLevel() {
     ell(P.x, P.y, 16, 5, 'rgba(0,0,0,0.35)');
     if (P.inv > 0 && P.inv % 8 < 4 && scene === 'level') return;
     if (P.smileT > 0) circ(P.x, P.y - 50, 60 + (50 - P.smileT) * 3, `rgba(255,240,160,${P.smileT / 50 * 0.25})`);
-    drawStephen(P.x, P.y, P.facing, game.look, { s: 1.3, walk: P.walk, moving: P.moving, atk: P.atk, spin: P.spin, sparkle: P.smileT > 0 });
+    if (P.frozenT > 0) ctx.filter = 'grayscale(1) brightness(1.1) sepia(0.4) hue-rotate(220deg)';
+    drawStephen(P.x, P.y, P.facing, game.look, { s: 1.3, walk: P.walk, moving: P.moving, atk: P.atk, spin: P.spin, sparkle: P.smileT > 0 || lv.ultT > 0 });
+    ctx.filter = 'none';
+    if (P.atk > 3) {
+      ctx.save(); ctx.translate(P.x, P.y - 55); ctx.scale(P.facing, 1);
+      ctx.strokeStyle = game.look.hair ? `rgba(200,235,255,${P.atk / 10})` : `rgba(255,255,255,${P.atk / 12})`; ctx.lineWidth = 6; ctx.lineCap = 'round';
+      const a0 = -1.2 + (10 - P.atk) * 0.25; ctx.beginPath(); ctx.arc(10, 0, stats().range * 0.85, a0, a0 + 1.2); ctx.stroke(); ctx.restore();
+    }
+    if (P.frozenT > 0) text('FROZEN', P.x, P.y - 110, 16, '#c69bff', 'center', 'bold', '#000');
+    if (P.confT > 0) for (let i = 0; i < 3; i++) { const a = frame * 0.12 + i * TAU / 3; circ(P.x + Math.cos(a) * 18, P.y - 105 + Math.sin(a) * 5, 3, '#9c3'); }
+    if (P.slowT > 0) text('...', P.x + 18, P.y - 100, 18, '#b6f04a', 'center', 'bold', '#000');
   } });
   for (const p of lv.proj) list.push({ y: p.y, d: () => drawProj(p) });
   list.sort((a, b) => a.y - b.y).forEach(o => o.d());
@@ -1396,15 +1531,28 @@ function renderLevel() {
   }
   for (const t of lv.texts) { ctx.globalAlpha = Math.min(1, t.t / 20); text(t.str, t.x, t.y, t.size, t.color, 'center', 'bold', '#000'); ctx.globalAlpha = 1; }
   ctx.restore();
+  if (P.confT > 0) rr(0, 0, W, H, 0, `rgba(140,200,40,${0.06 + 0.04 * Math.sin(frame * 0.15)})`);
+  if (lv.flashFx) rr(0, 0, W, H, 0, `rgba(${lv.flashFx.color},${lv.flashFx.t / 30 * 0.6})`);
+  if (lv.ultT) {
+    const k = lv.ultT;
+    const r = Math.min(1200, k * 18);
+    const g = ctx.createRadialGradient(P.x, P.y - 60, 0, P.x, P.y - 60, r);
+    g.addColorStop(0, `rgba(255,255,255,${Math.min(1, k / 50)})`); g.addColorStop(0.6, `rgba(255,240,160,${Math.min(0.85, k / 60)})`); g.addColorStop(1, 'rgba(255,230,120,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    if (k > 20) { ctx.save(); ctx.translate(P.x, P.y - 60); for (let i = 0; i < 18; i++) { ctx.rotate(TAU / 18 + 0.002 * k); ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-25, -900); ctx.lineTo(25, -900); ctx.fill(); } ctx.restore(); }
+    text('THE HANDSOME REVIVAL!', W / 2, 140, 46, '#ffe14a', 'center', 'bold', '#5a3a00');
+  }
 
   drawHud();
   if (lv.banner.t > 0) {
     const a = Math.min(1, lv.banner.t / 30, (180 - lv.banner.t) / 20 + 0.2);
     ctx.globalAlpha = Math.max(0, a);
-    rr(0, H / 2 - 40, W, 80, 0, 'rgba(0,0,0,0.55)');
-    text(lv.banner.text, W / 2, H / 2, 40, '#ffe14a', 'center', 'bold', '#000');
+    rr(0, H / 2 - 50, W, 100, 0, 'rgba(0,0,0,0.55)');
+    text(lv.banner.text, W / 2, H / 2 - (lv.banner.sub ? 12 : 0), 40, '#ffe14a', 'center', 'bold', '#000');
+    if (lv.banner.sub) text(lv.banner.sub, W / 2, H / 2 + 28, 22, '#fff', 'center', 'bold', '#000');
     ctx.globalAlpha = 1;
   }
+  if (lv.ultReady && !lv.ultT && lv.banner.t <= 0) text(isTouch ? 'Tap ULT: THE HANDSOME REVIVAL!' : 'Press U: THE HANDSOME REVIVAL!', W / 2, H - 40, 28 + Math.sin(frame * 0.2) * 3, '#ffe14a', 'center', 'bold', '#000');
   if (lv.phase === 'cleared' && lv.c.boss) text('Something big is coming...', W / 2, H / 2 + 70, 24, '#fff', 'center', 'bold', '#000');
   drawTouch();
   if (paused) { rr(0, 0, W, H, 0, 'rgba(0,0,0,0.6)'); text('PAUSED', W / 2, H / 2 - 10, 50, '#fff'); text('press P to resume', W / 2, H / 2 + 40, 18, '#ccc', 'center', 'normal'); }
@@ -1418,14 +1566,14 @@ function drawCharacter(id, x, y, o) {
   else if (id === 'undertaker') drawUndertaker(x, y, o);
 }
 const SPEAKER_ID = { 'Stephen': 'stephen', 'Nicky': 'nicky', 'Swamp Thing': 'swamp', 'Human Crockpot': 'crock', 'The Undertaker': 'undertaker' };
-const SPEAKER_COLOR = { 'Narrator': '#c8c8ff', 'Stephen': '#7fd0ff', 'Nicky': '#ff9ad0', 'Swamp Thing': '#8fdc7a', 'Human Crockpot': '#ff9a5a', 'The Undertaker': '#c69bff' };
+const SPEAKER_COLOR = { 'Prophecy': '#ffd34d', 'Narrator': '#c8c8ff', 'Stephen': '#7fd0ff', 'Nicky': '#ff9ad0', 'Swamp Thing': '#8fdc7a', 'Human Crockpot': '#ff9a5a', 'The Undertaker': '#c69bff' };
 
 function renderStory() {
   const d = story.def, pg = d.pages[story.i];
   drawBgLive(d.bg);
   rr(0, 0, W, H, 0, 'rgba(0,0,0,0.25)');
   const speaker = SPEAKER_ID[pg.who];
-  const dim = (id) => { ctx.filter = (pg.who === 'Narrator' || speaker === id) ? 'none' : 'brightness(0.55)'; };
+  const dim = (id) => { ctx.filter = (pg.who === 'Narrator' || pg.who === 'Prophecy' || speaker === id) ? 'none' : 'brightness(0.55)'; };
   dim('stephen');
   ell(250, 380, 50, 12, 'rgba(0,0,0,0.35)');
   drawStephen(250, 380, 1, game.look, { s: 2.6, sparkle: game.look.handsome && speaker === 'stephen' && story.chars < 5 });
@@ -1456,7 +1604,7 @@ function renderReward() {
   for (let i = 0; i < 16; i++) { ctx.rotate(TAU / 16); ctx.fillStyle = i % 2 ? 'rgba(255,220,80,0.18)' : 'rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-40, -400); ctx.lineTo(40, -400); ctx.fill(); }
   ctx.restore();
   const pop = Math.min(1, r.t / 30);
-  text(R.title, W / 2, 60, 46 * (0.6 + 0.4 * pop), '#ffe14a', 'center', 'bold', '#000');
+  text(R.title, W / 2, 60, 40 * (0.6 + 0.4 * pop), '#ffe14a', 'center', 'bold', '#000');
   ell(300, 390, 40, 10, 'rgba(0,0,0,0.4)'); ell(640, 390, 50, 12, 'rgba(0,0,0,0.4)');
   ctx.filter = 'grayscale(0.7) brightness(0.8)'; drawStephen(300, 390, 1, r.before, { s: 2.6 }); ctx.filter = 'none';
   text('BEFORE', 300, 420, 18, '#aaa');
@@ -1472,20 +1620,21 @@ function renderReward() {
 function renderTitle() {
   drawBgLive('kingdom');
   const t = frame;
-  text('STEPHEN\'S QUEST', W / 2, 92 + Math.sin(t * 0.04) * 4, 72, '#ffe14a', 'center', 'bold', '#3a1a4a');
-  text('~ The Rescue of Princess Nicky ~', W / 2, 152, 26, '#fff', 'center', 'bold', '#3a1a4a');
+  text('STEPHEN', W / 2, 78 + Math.sin(t * 0.04) * 4, 84, '#ffe14a', 'center', 'bold', '#3a1a4a');
+  text('THE LEGEND OF THE RESCUE', W / 2, 146, 32, '#fff', 'center', 'bold', '#3a1a4a');
+  text('An epic tale of courage, questionable hygiene, and the return of greatness.', W / 2, 186, 17, '#ffe9c8', 'center', 'bold', '#3a1a4a');
   ell(190, 470, 40, 10, 'rgba(0,0,0,0.35)');
   drawStephen(190, 470, 1, { muscles: false, handsome: false, hair: false }, { s: 2.6 });
   text('?', 240, 280, 40, '#fff', 'center', 'bold', '#000');
   drawNicky(686, 375, { s: 1.2, help: true }); drawCage(686, 375, 0);
   const hasSave = !!loadSave();
-  const items = hasSave ? ['NEW GAME', 'CONTINUE (Chapter ' + (loadSave().chapter + 1) + ')'] : ['START ADVENTURE'];
+  const items = hasSave ? ['NEW GAME', 'CONTINUE (' + (loadSave().chapter === 2 ? 'Final Quest' : 'Quest ' + (loadSave().chapter + 1)) + ')'] : ['START ADVENTURE'];
   items.forEach((it, i) => {
     const y = 375 + i * 50, sel = i === menuSel;
     rr(W / 2 - 160, y - 20, 320, 40, 10, sel ? 'rgba(255,225,74,0.95)' : 'rgba(0,0,0,0.45)');
     text(it, W / 2, y, 20, sel ? '#2a1a3a' : '#fff');
   });
-  text('Move: Arrows/WASD   Punch: Space/J   Smile: K   Hair: L   Pause: P   Mute: M', W / 2, 520, 14, 'rgba(255,255,255,0.85)', 'center', 'normal', 'rgba(0,0,0,0.6)');
+  text('Move: Arrows/WASD   Sword: Space/J   Smile: K   Hair: L   Ultimate: U   Pause: P   Mute: M', W / 2, 520, 14, 'rgba(255,255,255,0.85)', 'center', 'normal', 'rgba(0,0,0,0.6)');
 }
 
 function renderGameOver() {
@@ -1493,19 +1642,21 @@ function renderGameOver() {
   rr(0, 0, W, H, 0, `rgba(20,0,0,${Math.min(0.75, overT / 60)})`);
   text('STEPHEN FAINTED...', W / 2, H / 2 - 40, 54, '#ff5a5a', 'center', 'bold', '#000');
   text('"Just... five more minutes..."', W / 2, H / 2 + 10, 22, '#fff', 'center', 'bold', '#000');
-  if (overT > 60) text('Press Enter / tap to try this chapter again', W / 2, H / 2 + 60, 20, '#ffe14a', 'center', 'bold', '#000');
+  if (overT > 60) text('Press Enter / tap to try this quest again', W / 2, H / 2 + 60, 20, '#ffe14a', 'center', 'bold', '#000');
 }
 
 function renderVictory() {
   drawBgLive('kingdom');
   const t = frame;
   for (let i = 0; i < 14; i++) heart((i * 97 + t * 0.6) % W, (H - ((t * 0.8 + i * 61) % (H + 40))), 14 + (i % 3) * 5, `rgba(255,${90 + i * 8},${150 + i * 4},0.8)`);
-  text('PRINCESS NICKY IS SAVED!', W / 2, 80, 50, '#ffe14a', 'center', 'bold', '#3a1a4a');
-  text('Stephen is back: Muscles. Handsome. GREAT HAIR.', W / 2, 135, 22, '#fff', 'center', 'bold', '#3a1a4a');
+  text('STEPHEN: THE LEGEND OF THE RESCUE', W / 2, 60, 40, '#ffe14a', 'center', 'bold', '#3a1a4a');
+  text('Three bosses. One princess. One glorious comeback.', W / 2, 108, 22, '#fff', 'center', 'bold', '#3a1a4a');
+  text('Crowned the greatest hero in Mythara history.', W / 2, 140, 18, '#ffe9c8', 'center', 'bold', '#3a1a4a');
   ell(380, 470, 50, 12, 'rgba(0,0,0,0.35)');
-  drawStephen(380, 470, 1, { muscles: true, handsome: true, hair: true }, { s: 2.8, sparkle: t % 120 < 20 });
+  drawStephen(380, 470, 1, { muscles: true, handsome: true, hair: true }, { s: 2.8, sparkle: t % 120 < 20, crown: true });
   drawNicky(560, 470, { s: 2.6, happy: true });
-  if (overT > 90) text('THE END  ·  Enter / tap for title', W / 2, 520, 18, '#fff', 'center', 'bold', '#000');
+  if (overT > 60) { rr(W / 2 - 300, 486, 600, 30, 8, 'rgba(0,0,0,0.55)'); text('Coming soon: The Return of the Toe-less Terror, Part II', W / 2, 501, 17, '#c69bff', 'center', 'bold'); }
+  if (overT > 90) text('THE END  ·  Enter / tap for title', W / 2, 528, 13, '#ddd', 'center', 'normal');
 }
 
 function render() {
