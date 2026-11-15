@@ -385,6 +385,16 @@
     coilList.forEach(function (b, i) { d.position.set(b[0], b[1], b[2]); d.scale.set(1, 1, 1); d.rotation.set(0, b[3], 0.5); d.updateMatrix(); coils.setMatrixAt(i, d.matrix); });
     world.add(coils);
 
+    // laundry carts (work post) and the lockable door of cell W-3
+    box(0.8, 0.9, 1.4, 10.4, 0, -40.2, M.white); box(0.8, 0.9, 1.4, 8.2, 0, -40.6, M.steel);
+    const dc = { minX: 1e4, maxX: 1e4, minY: 0, maxY: 3.2, minZ: 1e4, maxZ: 1e4 }; colliders.push(dc);
+    const dg = new T.Group();
+    for (let i = 0; i < 9; i++) { const b = new T.Mesh(bg, M.steelDark); b.scale.set(1, 2.25, 1); b.position.set(-13, 1.125, -27.75 + i * 0.1875); dg.add(b); }
+    dg.visible = false; world.add(dg);
+    G.cellDoor = function (on) {
+      dg.visible = on;
+      if (on) { dc.minX = -13.1; dc.maxX = -12.9; dc.minZ = -27.8; dc.maxZ = -26.2; } else { dc.minX = dc.maxX = dc.minZ = dc.maxZ = 1e4; }
+    };
     solid2D = colliders.filter(function (c) { return c.minY < 1.6 && c.maxY > 0.15; });
   }
 

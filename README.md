@@ -10,9 +10,12 @@ stats (Health, Mind, Reputation, Trust, Heat) and decide which of seven endings 
 - **Raymond** — your cellmate, nineteen years down, teaches the rules people actually live by.
 - **Nathan** — the quiet man who runs the library cart. Depending on how you treat him he
   becomes your best friend, your love interest, or nobody.
-- Eight chapters: Intake (Day 1), Commissary (3), The Yard (5), The Officer (8),
-  Lockdown (14, a timed run back to your cell), Reputation (30), The Dream Seller (180),
+- Every day from Day 1 to Day 365 is played, one sleep at a time. Story chapters land on
+  their own days: Intake (1), Commissary (3), The Yard (5), The Officer (8), Lockdown (14,
+  followed by eight days locked in your cell), Reputation (30), The Dream Seller (180),
   The First Year (365).
+- Ordinary days have a work shift, two blocks of free time (lift, read, call home, write,
+  dominoes, time with Nathan), random events, and store day every Friday.
 
 ## Play
 
@@ -28,7 +31,7 @@ Open `index.html` in a browser (no build step, no server needed), or serve the f
 | Interact | E | tap the yellow prompt |
 | Choose | 1–4 or click | tap |
 
-Progress autosaves at the start of each day (localStorage).
+Progress autosaves after every conversation (localStorage); there is also a Save button.
 
 ## Layout
 

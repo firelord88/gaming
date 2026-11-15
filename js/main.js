@@ -3,14 +3,14 @@
   'use strict';
   const G = window.G;
   const $ = function (id) { return document.getElementById(id); };
-  const sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  const sleep = function (ms) { return new Promise(function (r) { setTimeout(r, G.fast ? ms / 25 : ms); }); };
   const SAVE_KEY = 'lifesentence.save.v1';
 
   // ------------------------------------------------------------------ state
   let S;
   function newState() {
     return {
-      di: 0,
+      day: 1,
       stats: { health: 90, mind: 85, rep: 10, trust: 10, heat: 5 },
       money: 0, debt: 0, ap: 0, job: null,
       inv: { ramen: 0, coffee: 0, tuna: 0, soap: 0, stamps: 0 },
@@ -26,7 +26,7 @@
     S.pos = [G.player.x, G.player.z, G.player.rot];
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); return true; } catch (e) { return false; }
   }
-  function loadSave() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); return s && s.stats ? s : null; } catch (e) { return null; } }
+  function loadSave() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.stats && s.day == null) s.day = [1, 3, 5, 8, 14, 30, 180, 365][s.di || 0]; return s && s.stats ? s : null; } catch (e) { return null; } }
   function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* storage unavailable */ } }
 
   // --------------------------------------------------------------------- UI
@@ -59,7 +59,7 @@
     if (S.inv.tuna) inv.push(S.inv.tuna + ' tuna'); if (S.inv.soap) inv.push('soap'); if (S.inv.stamps) inv.push(S.inv.stamps + ' stamps');
     if (S.debt) inv.push('OWES ' + S.debt + ' soups');
     $('inv').textContent = inv.join(' · ') || 'Nothing in your locker';
-    const d = DAYS[S.di];
+    const d = cur();
     $('daylabel').textContent = 'DAY ' + d.n; $('daytitle').textContent = d.title;
     $('ap').textContent = S.ap > 0 ? 'Free time: ' + '●'.repeat(S.ap) : '';
   }
@@ -148,7 +148,7 @@
   // ------------------------------------------------------------- objectives
   const BUNK = { x: -16.3, z: -28.6 }, CELL = { x: -15.2, z: -27 };
   function complete(id) { if (!S.done[id]) { S.done[id] = true; G.sfx.good(); } objectives(); }
-  function activeObj() { return DAYS[S.di].obj.filter(function (o) { return !o.if || o.if(); }); }
+  function activeObj() { return cur().obj.filter(function (o) { return !o.if || o.if(); }); }
   function allDone() { return activeObj().every(function (o) { return o.opt || S.done[o.id]; }); }
   function objectives() {
     const list = activeObj(), ul = $('objlist'); ul.innerHTML = '';
@@ -159,7 +159,7 @@
       ul.appendChild(li);
     });
     if (!target && !lock) {
-      const li = document.createElement('li'); li.className = 'cur'; li.textContent = 'Return to your bunk to end the day'; ul.appendChild(li);
+      const li = document.createElement('li'); li.className = 'cur'; li.textContent = cur().free ? 'Your time is your own. Return to your bunk to end the day' : 'Return to your bunk to end the day'; ul.appendChild(li);
       G.setMarker(BUNK);
     } else if (target) {
       const p = typeof target.at === 'string' ? G.npcs[target.at] : target.at;
@@ -230,7 +230,7 @@
   }
 
   // ------------------------------------------------------------------ talks
-  const D = function () { return DAYS[S.di].n; };
+  const D = function () { return cur().n; };
   const talk = {};
 
   talk.raymond = async function () {
@@ -318,7 +318,7 @@
       `You hear a rumor, let it die with you. Don't carry another man's story around.`,
       `Some officers are professional. Some aren't. Some inmates are decent. Some aren't. Don't judge by the uniform — either one.`,
     ];
-    await say(R, lines[(S.di + S.ap) % lines.length]);
+    await say(R, lines[(S.day + S.ap) % lines.length]);
   };
 
   talk.alvarez = async function () {
@@ -337,7 +337,7 @@
       await say(A, `And Reed — I treat people the way they treat me. That's the whole arrangement.`);
       adj('trust', 3); complete('job'); return;
     }
-    await say(A, [`Keep it moving, Reed.`, `You need something, put in a request slip. That's what they're for.`, `Stay out of the middle and you and I will never have a problem.`][S.di % 3]);
+    await say(A, [`Keep it moving, Reed.`, `You need something, put in a request slip. That's what they're for.`, `Stay out of the middle and you and I will never have a problem.`][S.day % 3]);
   };
 
   talk.briggs = async function () {
@@ -375,7 +375,7 @@
 
   talk.tiny = async function () {
     const Tn = 'Tiny', d = D();
-    if (d === 30 && S.debt > 0) {
+    if (S.debt > 0 && d !== 14) {
       await say(Tn, `Reed. Dee says you're into the table for ${S.debt}. Today's the day.`);
       const friend = F().nathan === 'love' || F().nathan === 'friend';
       const c = await choose([
@@ -398,7 +398,7 @@
       }
       hud(); complete('debt'); return;
     }
-    await say(Tn, [`You still here?`, `Dee's table is open if you got soups.`, `I see you, Reed.`][S.di % 3]);
+    await say(Tn, [`You still here?`, `Dee's table is open if you got soups.`, `I see you, Reed.`][S.day % 3]);
   };
 
   talk.dee = async function () {
@@ -610,11 +610,11 @@
 
   talk.clerk = async function () {
     const d = D();
-    if (d !== 3 && d !== 30 && d !== 180) { await say('Ms. Okafor', `Window's closed. Store day is Friday.`); return; }
+    if (!isStoreDay(d)) { await say('Ms. Okafor', `Window's closed. Store day is Friday.`); return; }
     await say('Ms. Okafor', `ID. …Reed, 784219. You have $${S.money} on your books. Spend limit applies.`);
     closeDialog();
     const any = await shop();
-    if (any) { await say('Ms. Okafor', `Next.`); if (d === 3) complete('store'); }
+    if (any) { await say('Ms. Okafor', `Next.`); complete('store'); }
     else if (d === 3) await say('Ms. Okafor', `Nothing? Line's behind you, Reed.`);
   };
   talk.rowA = talk.rowB = async function () { await narr(`He looks through you until you leave.`); };
@@ -640,6 +640,9 @@
       });
     });
     const fixed = function (x, z, r, label, act) { things.push({ pos: function () { return { x: x, z: z }; }, r: r, label: label, act: act }); };
+    Object.keys(JOBS).forEach(function (k) {
+      fixed(JOBS[k].at.x, JOBS[k].at.z, 2.0, function () { return !lock && S.job === k && cur().free && !S.done.shift ? 'Start your shift' : null; }, shift);
+    });
     fixed(38, -4.6, 2.0, function () { return lock ? null : 'Commissary window'; }, talk.clerk);
     fixed(BUNK.x, BUNK.z, 1.7, function () { return lock ? null : allDone() ? 'Lie down — end the day' : 'Your bunk'; }, bunk);
     fixed(-16.9, -26.1, 1.3, function () { return lock ? null : 'Desk'; }, desk);
@@ -683,13 +686,13 @@
     const c = await choose([{ id: 'y', t: `Lie down. Let the day end.` }, { id: 'n', t: `Not yet.` }]);
     if (c !== 'y') return;
     closeDialog();
-    const d = DAYS[S.di];
+    const d = cur();
     await fade(true);
     if (d.end) await d.end();
     closeDialog();
     if (S.stats.mind <= 0 || S.stats.health <= 0 || S.stats.heat >= 100) { await fade(false); return; }
-    if (S.di === DAYS.length - 1) return ending(F().gang ? 'row' : S.debt >= 10 ? 'ledger' : 'another');
-    S.di++; await startDay(true);
+    if (S.day >= 365) return ending(F().gang ? 'row' : S.debt >= 10 ? 'ledger' : 'another');
+    S.day++; await startDay(true);
   }
 
   // --------------------------------------------------------------- lockdown
@@ -726,18 +729,8 @@
       else { await narr(`The response team finds you out of place in the dayroom. Face down, zip ties, a knee between the shoulder blades. A disciplinary case for being where you weren't supposed to be.`); adj('heat', 14); adj('health', -6); }
       if (!F().nathanChoice && l) { await narr(`You ran right past Nathan on the floor. You only let yourself know that now.`); bond('nathan', -12); adj('mind', -5); F().nathanChoice = true; }
       await say('Raymond', `Stay away from the door. Whatever you hear tonight — you didn't.`);
-      await narr(`The unit stays locked down nine days. Sack lunches through the slot. No showers until day four. No phones. No yard. Twenty-four hours a day, six feet from another man.`);
-      const c = await choose([
-        { id: 'ex', t: `Burpees and push-ups until the floor is wet.` },
-        { id: 'read', t: `Read everything in the cell. Then read it again.` },
-        { id: 'talk', t: `Ask Raymond how he's done nineteen years.` },
-      ]);
-      if (c === 'ex') { await narr(`Raymond counts for you from the top bunk without looking up from his book.`); adj('health', 8); adj('mind', -4); }
-      if (c === 'read') { await narr(F().savedNathan ? `On day three a book slides under the door off the officer's cart, with a pencil note inside: "Glasses survived. So did I. — N."` : `Two westerns and the inmate handbook. You could now recite the grievance procedure in your sleep.`); adj('mind', 5); if (F().savedNathan) bond('nathan', 6); }
-      if (c === 'talk') {
-        await say('Raymond', `I had a daughter who was six when I came in. She's twenty-five. She writes every month. I do this year the same way I did the first: until the next letter.`);
-        bond('raymond', 12); adj('mind', 3);
-      }
+      await narr(`The unit is locked down. Sack lunches through the slot. No showers, no phones, no yard. Nobody says for how long.`);
+      G.cellDoor(true);
       complete('cell');
     });
   }
@@ -753,13 +746,165 @@
   };
   const YARD_ROW = { cutter: [10.9, 4, -Math.PI / 2], rowA: [12.6, 6.3, -Math.PI / 2], rowB: [12.4, 1.7, -Math.PI / 2] };
   const RAY_CELL = [-15.6, -25.4, Math.PI / 2];
-  function perks() {
-    if (S.job === 'library') { adj('mind', 4); S.bond.nathan = Math.min(100, S.bond.nathan + 5); }
-    if (S.job === 'kitchen') adj('health', 5);
-    if (S.job === 'laundry') { item('ramen', 6); toast('+6 soups from pressing whites', 'good'); }
+  const WEEK = ['Friday', 'Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+  const weekday = function (n) { return WEEK[(n + 4) % 7]; };
+  const isStoreDay = function (n) { return n % 7 === 3; };
+  const briggsGone = function () { return !!(F().grievance || F().toldTruth); };
+  const JOBS = {
+    library: { at: { x: -36.6, z: -2.2 }, text: 'Work your shift on the library cart' },
+    kitchen: { at: { x: 36, z: 1.5 }, text: 'Work your shift in the kitchen' },
+    laundry: { at: { x: 9, z: -38.6 }, text: 'Work your shift pressing whites (laundry carts, back of the dayroom)' },
+  };
+  async function shift() {
+    if (S.job === 'library') { await narr(`Three hours pushing the cart cell to cell. Men who never speak to you on the yard ask, quietly, if you've got anything good.`); adj('mind', 2); S.bond.nathan = Math.min(100, S.bond.nathan + 1); }
+    if (S.job === 'kitchen') { await narr(`Up at three-thirty. Four hundred trays. You eat standing up at the steam table before anyone else is awake.`); adj('health', 2); }
+    if (S.job === 'laundry') { await narr(`Steam, bleach, and a line of men who pay two soups for a crease you could cut yourself on.`); item('ramen', 2); toast('+2 soups', 'good'); }
+    complete('shift');
   }
-
-  const DAYS = [
+  const pick = function (a) { return a[(Math.random() * a.length) | 0]; };
+  const MORNINGS = [
+    `Count clears at 5:40. Chow is pancakes that could patch a tire.`,
+    `You wake a minute before the lights, the way you do now. Your body has learned the schedule your mind still refuses.`,
+    `Somebody down the tier is singing, badly, and nobody tells him to stop.`,
+    `Rain on the roof all morning. The whole block smells like wet concrete and bleach.`,
+    `The day starts the way they all start: a count, a door, a tray.`,
+    `Raymond is already up, doing the slow stretches he does every morning. He says a man's back is the first thing this place takes.`,
+    `The television is on before the sun is. Somebody always wants the news; somebody always wants cartoons.`,
+    `You dreamed about driving. You lie still for a minute so you don't lose it.`,
+    `Shift change. New voices on the radios. You've learned to tell what kind of day it will be from how the keys sound.`,
+    `Another morning. You mark it off in your head and try not to look at how many are left.`,
+  ];
+  const NIGHTS = [
+    `Count. Lights dim. Another one down.`,
+    `You lie there listening to four hundred men breathe.`,
+    `Raymond's reading light clicks off above you. "Night, youngster."`,
+    `The door racks shut. It still makes you flinch, a little less each time.`,
+    `You go over the day for mistakes, find none worth losing sleep over, and lose sleep anyway.`,
+    `Somewhere a radio plays low. For a minute it could be anywhere.`,
+  ];
+  const EVENTS = [
+    { fn: async function () {
+      await narr(`There's a honey bun on your bunk. Nobody saw who left it. Nobody ever does.`);
+      const c = await choose([{ id: 'a', t: `Leave it on the dayroom table for whoever wants it back.` }, { id: 'b', t: `Eat it. It's a honey bun.` }]);
+      if (c === 'a') { await narr(`It's gone in a minute. So is whatever string was tied to it.`); adj('trust', 2); adj('rep', 1); }
+      else { await narr(`It's the best thing you've eaten in weeks. Two days later a man you've never met mentions you owe him for it.`); S.debt += 3; adj('mind', 2); hud(); }
+    } },
+    { fn: async function () {
+      await narr(`A man from the upper tier wants to borrow two soups "till store day."`);
+      const c = await choose([{ id: 'a', t: `"I don't lend. Nothing personal."` }, { id: 'b', t: `Give him two soups. Don't call it a loan.`, if: S.inv.ramen >= 2 }, { id: 'c', t: `Lend them and expect them back.`, if: S.inv.ramen >= 2 }]);
+      if (c === 'a') { await narr(`He shrugs and tries the next cell.`); adj('rep', 1); }
+      if (c === 'b') { item('ramen', -2); await narr(`A gift you can explain. He nods like you passed something.`); adj('trust', 3); }
+      if (c === 'c') { item('ramen', -2); await narr(`Store day comes and goes. Now you either collect or you're the man who doesn't. Raymond just looks at you.`); adj('rep', -3); adj('mind', -2); }
+    } },
+    { fn: async function () { await narr(`Shakedown. Everybody out on the tier in boxers while they toss the cells. Your mattress ends up on the floor with a boot print on it.`); adj('mind', -2); if (S.stats.heat >= 30) { await narr(`They spend a long time in yours.`); adj('heat', 3); } } },
+    { fn: async function () {
+      if (F().family) { await narr(`Mail call. Your name. Your sister's handwriting, three pages, a photo of the dog.`); adj('mind', 5); }
+      else { await narr(`Mail call. You listen for your name all the way to the end of the bag.`); adj('mind', -3); }
+    } },
+    { fn: async function () {
+      await narr(`Two men are squaring up over the television. One of them looks at you. "Tell him. It was on this channel first."`);
+      const c = await choose([{ id: 'a', t: `"I wasn't watching." Walk on.` }, { id: 'b', t: `Back him up.` }]);
+      if (c === 'a') { await narr(`Not every argument needs you in it.`); adj('trust', 1); }
+      else { await narr(`Now it's three men in an argument, and one of them is going to remember which side you picked.`); adj('rep', 2); adj('heat', 3); }
+    } },
+    { fn: async function () {
+      await narr(`A new arrival is standing in the dayroom with his property bag, exactly where you stood.`);
+      const c = await choose([{ id: 'a', t: `Tell him which tables to stay away from.` }, { id: 'b', t: `Mind your business.` }]);
+      if (c === 'a') { await narr(`You hear Raymond's words come out of your mouth. He listens like you're somebody who knows.`); adj('mind', 3); adj('trust', 2); }
+      else await narr(`He'll learn. Everybody does.`);
+    } },
+    { fn: async function () { await narr(`The showers run cold and the ice machine is broken. Nothing personal. Nothing ever is.`); adj('health', -2); } },
+    { fn: async function () {
+      await narr(`At chow, somebody leans in with a story about a man on E side and why he's really here.`);
+      const c = await choose([{ id: 'a', t: `Let it die with you.` }, { id: 'b', t: `Pass it along.` }]);
+      if (c === 'a') { adj('trust', 2); }
+      else { await narr(`By evening it has your name on it.`); adj('rep', -3); adj('trust', -3); }
+    } },
+    { if: function () { return S.bond.nathan >= 20 && F().nathan !== 'none'; }, fn: async function () { await narr(`Nathan has set a book aside for you with a slip of paper in it: "p. 212. Tell me I'm wrong."`); adj('mind', 3); S.bond.nathan = Math.min(100, S.bond.nathan + 2); } },
+    { if: function () { return S.bond.raymond >= 8; }, fn: async function () { await narr(`Raymond makes two cups of coffee and hands you one without a word. From Raymond, that's a speech.`); adj('mind', 2); S.bond.raymond += 1; } },
+    { fn: async function () {
+      await say('Officer Alvarez', `Reed. Wall. Random pat search.`);
+      const c = await choose([{ id: 'a', t: `Hands on the wall. Say nothing.` }, { id: 'b', t: `"Third time this week."` }]);
+      if (c === 'a') { await say('Officer Alvarez', `Clear. Go on.`); adj('trust', 1); }
+      else { await say('Officer Alvarez', `Then you know how it goes.`); adj('heat', 4); }
+    } },
+    { fn: async function () {
+      await narr(`Somebody is sitting in the seat you've eaten in for weeks. He watches you notice.`);
+      const c = await choose([{ id: 'a', t: `Sit somewhere else. It's a seat.` }, { id: 'b', t: `"You're in my spot."` }]);
+      if (c === 'a') { await narr(`It is only a seat. You tell yourself that through the whole meal.`); adj('rep', -1); adj('mind', -1); }
+      else { await narr(`A long second. Then he picks up his tray. Your hands shake for an hour afterwards.`); adj('rep', 3); adj('mind', -2); }
+    } },
+    { if: function () { return !!F().gang; }, fn: async function () { await narr(`Cutter has you stand lookout at the end of the tier for twenty minutes. You don't ask what for.`); adj('heat', 3); adj('rep', 1); } },
+    { if: function () { return !!F().enemy && !F().gang; }, fn: async function () { await narr(`A shoulder out of nowhere on the stairs. Hard. Nobody saw anything.`); adj('health', -4); } },
+  ];
+  function freeDay(n) {
+    const yardDay = n % 2 === 0, sky = ['day', 'overcast', 'day', 'hot', 'dusk', 'dawn', 'day'][n % 7];
+    const time = { dawn: '06:10 AM', dusk: '06:30 PM', hot: '02:40 PM', overcast: '10:20 AM', day: '09:15 AM' }[sky];
+    return {
+      n: n, free: true, title: weekday(n).toUpperCase(), time: time, sky: sky, crowd: 'normal', ap: 2,
+      spawn: [-15.3, -27.3, Math.PI / 2],
+      cast: function () {
+        return BASE(Object.assign({
+          raymond: n % 3 === 0 ? RAY_CELL : n % 3 === 1 ? [-7, 5.6, Math.PI * 0.75] : [-6.35, -34, Math.PI / 2, 'sit'],
+          nathan: n % 4 === 0 ? [23.4, 6, -Math.PI / 2] : n % 4 === 2 ? [3.65, -24, Math.PI / 2, 'sit'] : [-35.6, -3.9, Math.PI / 2],
+          tiny: [8, -19, 0], alvarez: yardDay ? [24, -6, -Math.PI / 2] : [-3.4, -9, 0],
+          briggs: briggsGone() ? null : [-6, -15.6, Math.PI],
+        }, yardDay ? YARD_ROW : {}));
+      },
+      obj: [
+        { id: 'shift', text: S.job ? JOBS[S.job].text : '', at: S.job ? JOBS[S.job].at : null, if: function () { return !!S.job; } },
+        { id: 'debt', text: 'Tiny is collecting for the domino table', at: 'tiny', if: function () { return isStoreDay(n) && (S.debt > 0 || !!S.done.debt); } },
+        { id: 'store', text: 'Store day — the commissary window is open', at: { x: 38, z: -4.6 }, opt: true, if: function () { return isStoreDay(n); } },
+      ],
+      start: async function () {
+        if (n === 23) await narr(`Lockdown lifts. The doors rack open all at once, and four hundred men walk out blinking like they've been underground.`);
+        else if (n === 2) await narr(`Your first full day. Nobody tells you where to stand. You learn by watching where nobody else does.`);
+        else await narr(MORNINGS[n % MORNINGS.length]);
+        if (n % 30 === 0 && F().family) { cash(40); await narr(`Your sister put forty dollars on your books. "Still here. Keep writing."`); }
+        if (isStoreDay(n)) caption('Friday. Store day — the commissary window is open in the east building.', 6000);
+        if (n > 2 && Math.random() < 0.5) { const ev = pick(EVENTS.filter(function (e) { return !e.if || e.if(); })); await ev.fn(); }
+      },
+      end: async function () { await narr(NIGHTS[n % NIGHTS.length]); adj('mind', -1); },
+    };
+  }
+  const LOCK_LINES = [
+    `Lockdown, day two. Breakfast is a paper sack through the slot: two boiled eggs and a slice of bread.`,
+    `Lockdown, day three. Somebody on the upper tier has been kicking his door since before dawn.`,
+    `Lockdown, day four. Showers, finally — five minutes, in cuffs, one cell at a time.`,
+    `Lockdown, day five. You know every crack in the ceiling. You've named some of them.`,
+    `Lockdown, day six. The investigators walk the tier with clipboards and don't look at anyone.`,
+    `Lockdown, day seven. Raymond teaches you to play chess on a board drawn on a bedsheet.`,
+    `Lockdown, day eight. Rumor says tomorrow. Rumor said that yesterday.`,
+    `Lockdown, day nine. Six feet from another man, twenty-four hours a day. You've stopped noticing when either of you speaks.`,
+  ];
+  function lockDay(n) {
+    return {
+      n: n, lockdown: true, title: 'LOCKDOWN', time: weekday(n) + ' · day ' + (n - 13) + ' locked in', sky: 'overcast', crowd: 'none', ap: 0,
+      spawn: [-15.3, -27.3, Math.PI / 2],
+      cast: function () { return { raymond: RAY_CELL }; },
+      obj: [{ id: 'pass', text: 'Get through the day', at: CELL }],
+      start: async function () {
+        await narr(LOCK_LINES[n - 15]);
+        const c = await choose([
+          { id: 'ex', t: `Burpees and push-ups until the floor is wet.` },
+          { id: 'read', t: `Read everything in the cell. Then read it again.` },
+          { id: 'talk', t: `Talk with Raymond.` },
+        ]);
+        if (c === 'ex') { await narr(`Raymond counts for you from the top bunk without looking up from his book.`); adj('health', 3); }
+        if (c === 'read') {
+          if (n === 17 && F().savedNathan) { await narr(`A book slides under the door off the officer's cart, with a pencil note inside: "Glasses survived. So did I. — N."`); bond('nathan', 6); adj('mind', 4); }
+          else { await narr(`Two westerns and the inmate handbook. You could recite the grievance procedure in your sleep.`); adj('mind', 2); }
+        }
+        if (c === 'talk') {
+          if (!F().rayStory) { F().rayStory = true; await say('Raymond', `I had a daughter who was six when I came in. She's twenty-five. She writes every month. I do this year the same way I did the first: until the next letter.`); bond('raymond', 12); adj('mind', 3); }
+          else { await say('Raymond', pick([`Lockdown's just prison with the lid on. You already know how to do this.`, `Sleep when you can. Move when you can't. Don't count the days out loud.`, `Tell me about a meal. Best one you ever had. Go slow.`])); S.bond.raymond += 2; adj('mind', 1); }
+        }
+        complete('pass');
+      },
+      end: async function () { await narr(n === 22 ? `Word comes down the tier, cell to cell: normal operations in the morning.` : `The slot bangs shut on the dinner sack. That's the day.`); adj('mind', -1); },
+    };
+  }
+  const CHAPTERS = [
     {
       n: 1, title: 'INTAKE DAY', time: '06:42 AM · Harlan Creek Unit, Texas', sky: 'dawn', crowd: 'normal', ap: 0,
       spawn: [0, -14.6, Math.PI],
@@ -841,10 +986,9 @@
         { id: 'cell', text: 'LOCKDOWN — get to your cell (W-3)', at: CELL, if: function () { return !!S.done.meet; } },
       ],
       start: async function () {
-        perks();
         await narr(`Two weeks in. You've learned the schedule: chow, count, rec, count, chow, count. Today the air on the yard feels wrong, and you don't know enough yet to know why.`);
       },
-      end: async function () { await narr(`Day nine of lockdown ends the way it began: a door, a key, a count.`); },
+      end: async function () { await narr(`The first night of lockdown. The whole block is awake and nobody makes a sound.`); },
     },
     {
       n: 30, title: 'REPUTATION', time: 'Thursday, 06:50 PM', sky: 'dusk', crowd: 'normal', ap: 2,
@@ -859,7 +1003,6 @@
         { id: 'cutter30', text: 'Give Cutter your answer', at: 'cutter', if: function () { return F().cutterPending || S.done.cutter30; } },
       ],
       start: async function () {
-        perks();
         if (F().family) { cash(40); await narr(`Your sister put forty dollars on your books, with a message: "Still here. Keep writing."`); }
         if (F().mule) {
           await narr(`They hit the tier at 5 AM. Somebody in E-4 got caught and started talking. Officer Alvarez stands in your doorway while two others take your mattress apart.`);
@@ -887,9 +1030,8 @@
         { id: 'hold', text: 'Cutter has a job for you', at: 'cutter', if: function () { return !!F().gang; } },
       ],
       start: async function () {
-        perks();
         await narr(`Six months. Summer in Texas, no air conditioning; the cell holds a hundred and four degrees at midnight. You have stopped counting days and started counting store days.`);
-        let m = -14;
+        let m = -8;
         if (F().family) m += 5; if (F().nathan === 'love') m += 8; if (F().nathan === 'friend') m += 6; if (S.bond.raymond >= 15) m += 3;
         if (m < 0) { await narr(m <= -9 ? `Some mornings you can't remember your sister's voice. You are disappearing a little at a time, and nobody is there to notice.` : `It wears on you. But there are people who would notice if you stopped showing up, and that turns out to be most of what holds a man together.`); adj('mind', m); }
         else { await narr(`It should have hollowed you out by now. It hasn't. You know exactly who to thank for that.`); adj('mind', 3); }
@@ -909,31 +1051,36 @@
         { id: 'nathan365', text: 'Nathan is at his table with the paperback', at: 'nathan', opt: true },
       ],
       start: async function () {
-        perks();
         await narr(`One year. You know when meals are served, when count clears, when the phones open. You've learned to hear trouble before it reaches your door.`);
         await narr(`You walked in here not knowing which table to sit at. Tonight you cross the dayroom without thinking about it.`);
       },
     },
   ];
 
+  const CH = {}; CHAPTERS.forEach(function (c) { CH[c.n] = c; });
+  let curDef = null;
+  function cur() { if (!curDef || curDef.n !== S.day) curDef = CH[S.day] || (S.day > 14 && S.day < 23 ? lockDay(S.day) : freeDay(S.day)); return curDef; }
+
   async function startDay(fromSleep, resume) {
-    const d = DAYS[S.di];
+    curDef = null;
+    const d = cur();
     busy = true; G.locked = true;
     if (!fromSleep) await fade(true);
     if (!resume) { S.done = {}; S.ap = d.ap; S.mid = false; }
     lock = null; $('timer').hidden = true;
     G.alarm = false; G.sfx.siren(false); $('red').classList.remove('on');
     G.setSky(d.sky);
+    G.cellDoor(!!d.lockdown || (d.n === 14 && !!S.done.cell));
     if (d.n === 14 && S.done.cell) { G.setCrowd('none'); G.placeCast({ raymond: RAY_CELL }); }
     else { G.setCrowd(d.crowd); G.placeCast(d.cast()); }
     ['raymond', 'nathan', 'alvarez', 'briggs', 'cutter', 'duke'].forEach(function (k) {
-      if ((k === 'raymond' && S.di > 0) || (k === 'nathan' && S.di > 1) || (k === 'alvarez') || (k === 'briggs' && S.di > 3) || (k === 'cutter' && S.di > 2)) G.npcs[k].known = true;
+      if ((k === 'raymond' && S.day > 1) || (k === 'nathan' && S.day > 3) || (k === 'alvarez') || (k === 'briggs' && S.day > 8) || (k === 'cutter' && S.day > 5) || (k === 'duke' && S.day > 180)) G.npcs[k].known = true;
     });
-    G.npcs.dee.known = G.npcs.dom2.known = G.npcs.tiny.known = S.di > 1;
+    G.npcs.dee.known = G.npcs.dom2.known = G.npcs.tiny.known = S.day > 3;
     if (resume && S.pos) G.teleport(S.pos[0], S.pos[1], S.pos[2]); else G.teleport(d.spawn[0], d.spawn[1], d.spawn[2]);
     if (!resume) save(); hud(); $('objlist').innerHTML = ''; G.setMarker(null);
     $('hud').hidden = false;
-    await card('DAY ' + d.n, d.title + '  ·  ' + d.time, 2800);
+    await card('DAY ' + d.n, d.title + '  ·  ' + d.time, d.free || d.lockdown ? 1500 : 2800);
     G.sfx.clang();
     await fade(false);
     busy = false;
@@ -991,7 +1138,7 @@
     $('end-title').textContent = title;
     $('end-body').innerHTML = ''; paras.forEach(function (p) { const e = document.createElement('p'); e.textContent = p; $('end-body').appendChild(e); });
     const st = S.stats;
-    $('end-stats').textContent = 'Day ' + DAYS[S.di].n + '  ·  Health ' + st.health + '  ·  Mind ' + st.mind + '  ·  Reputation ' + st.rep + '  ·  Trust ' + st.trust + '  ·  Heat ' + st.heat;
+    $('end-stats').textContent = 'Day ' + cur().n + '  ·  Health ' + st.health + '  ·  Mind ' + st.mind + '  ·  Reputation ' + st.rep + '  ·  Trust ' + st.trust + '  ·  Heat ' + st.heat;
     $('hud').hidden = true; $('prompt').hidden = true; G.setMarker(null);
     clearSave(); $('end').hidden = false;
   }
@@ -1119,7 +1266,7 @@
   G.boot();
   buildThings();
   S = newState(); G.S = S;
-  (function () { const sv = loadSave(); $('cont').hidden = !sv; if (sv) $('cont').textContent = 'Continue · Day ' + DAYS[sv.di].n; })();
+  (function () { const sv = loadSave(); $('cont').hidden = !sv; if (sv) $('cont').textContent = 'Continue · Day ' + sv.day; })();
   // test hooks
-  G.debug = { state: function () { return S; }, goto: function (i) { S.di = i; return startDay(false); }, advance: advance, busy: function () { return busy; }, ending: ending };
+  G.debug = { state: function () { return S; }, goto: function (i) { S.day = i; return startDay(false); }, advance: advance, busy: function () { return busy; }, ending: ending };
 })();
