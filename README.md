@@ -27,4 +27,13 @@ Then Stephen enters the tower, rescues Nicky and is crowned the greatest hero in
 - The Handsome Revival: U (when it unlocks in the final battle)
 - Pause: P, Mute: M
 
-Progress is saved after each quest. If Stephen faints, you restart that quest.
+### Difficulty and reviving
+Pick the difficulty on the title screen:
+- **Easy**: more hearts, weaker and slower bosses.
+- **Medium**: the standard adventure.
+- **Hard**: fewer hearts, tougher and faster bosses.
+- **Survival**: no revives. One death and you start over from Quest 1.
+
+If Stephen faints, choose **Revive** to keep fighting right where you are, or **Restart Quest**. Reviving gives the boss a little health back (10% on Easy, 15% on Medium, 25% on Hard).
+
+Progress is saved after each quest.

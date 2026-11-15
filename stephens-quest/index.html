@@ -164,7 +164,17 @@ cv.addEventListener('pointerup', endJoy); cv.addEventListener('pointercancel', e
 const confirmPressed = () => wasPressed('enter', ' ') || !!tapped;
 
 /* ---------------- persistent state ---------------- */
-const SAVE_KEY = 'stephensQuest.v2';
+const SAVE_KEY = 'stephensQuest.v2', DIFF_KEY = 'stephensQuest.difficulty';
+const DIFF = {
+  easy: { label: 'EASY', color: '#8fe07a', hp: 3, boss: 0.75, revive: 0.10, heart: 300, tempo: -1, desc: 'More hearts, weaker and slower bosses.' },
+  medium: { label: 'MEDIUM', color: '#ffe14a', hp: 0, boss: 1, revive: 0.15, heart: 420, tempo: 0, desc: 'The standard adventure.' },
+  hard: { label: 'HARD', color: '#ff8a4a', hp: -1, boss: 1.35, revive: 0.25, heart: 600, tempo: 1, desc: 'Fewer hearts. Tougher, faster bosses.' },
+  survival: { label: 'SURVIVAL', color: '#ff4a5a', hp: 0, boss: 1, revive: 0, heart: 420, tempo: 0, desc: 'No revives. One death and you start over from Quest 1.' },
+};
+const DIFF_ORDER = ['easy', 'medium', 'hard', 'survival'];
+let diff = 'medium';
+try { const d = localStorage.getItem(DIFF_KEY); if (DIFF[d]) diff = d; } catch (e) { }
+function cycleDiff(dir) { diff = DIFF_ORDER[(DIFF_ORDER.indexOf(diff) + dir + 4) % 4]; try { localStorage.setItem(DIFF_KEY, diff); } catch (e) { } sfx('blip'); }
 let game = { chapter: 0, look: { muscles: false, handsome: false, hair: false } };
 function saveGame() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(game)); } catch (e) { } }
 function loadSave() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.look && typeof s.chapter === 'number' && s.chapter > 0) return s; } catch (e) { } return null; }
@@ -293,7 +303,7 @@ function stats() {
   return {
     speed: L.hair ? 3.9 : L.muscles ? 2.9 : 2.4,
     dmg: L.muscles ? 3 : 1,
-    maxHp: 6 + (L.muscles ? 2 : 0) + (L.handsome ? 1 : 0) + (L.hair ? 2 : 0),
+    maxHp: 6 + DIFF[diff].hp + (L.muscles ? 2 : 0) + (L.handsome ? 1 : 0) + (L.hair ? 2 : 0),
     range: L.muscles ? 62 : 52,
     atkCd: L.muscles ? 16 : 22,
   };
@@ -305,7 +315,7 @@ function startLevel() {
   P = { x: 160, y: 360, facing: 1, hp: s.maxHp, maxHp: s.maxHp, walk: 0, moving: false, atk: 0, atkCd: 0, inv: 60,
         smileCd: 0, smileT: 0, hairCd: 0, spin: 0, spinHit: new Set(), frozenT: 0, confT: 0, slowT: 0, dashT: 0, dashCd: 0, dvx: 0, dvy: 0 };
   lv = { c, phase: 'minions', spawned: 0, killed: 0, spawnT: 30, enemies: [], boss: null, proj: [], haz: [], parts: [], texts: [],
-         pickups: [], shake: 0, t: 0, banner: { text: c.title, sub: c.subtitle, t: 180 }, heartT: 0, endT: 0, ultReady: false, ultT: 0, flashFx: null };
+         pickups: [], shake: 0, t: 0, banner: { text: c.title, sub: c.subtitle, t: 180 }, heartT: 0, endT: 0, ultReady: false, ultT: 0, flashFx: null, revives: 0, reviveDebt: 0 };
   scene = 'level'; paused = false;
 }
 
@@ -338,6 +348,8 @@ function spawnBoss(kind) {
   if (kind === 'swamp') Object.assign(base, { name: 'SWAMP THING', hp: 20, r: 40 });
   if (kind === 'crock') Object.assign(base, { name: 'THE HUMAN CROCKPOT', hp: 70, r: 42, vx: 0, vy: 0 });
   if (kind === 'undertaker') Object.assign(base, { name: 'THE UNDERTAKER', hp: 160, r: 30 });
+  base.baseHp = Math.round(base.hp * DIFF[diff].boss);
+  base.hp = Math.round(base.baseHp * (1 + lv.reviveDebt));
   base.maxHp = base.hp;
   lv.boss = base;
   sfx('boss'); lv.shake = 20;
@@ -429,6 +441,20 @@ function doUltimate() {
   lv.ultT = 1; lv.ultReady = false; P.inv = 9999; sfx('smile'); sfx('power');
   lv.proj.length = 0; lv.haz.length = 0;
   for (const e of lv.enemies) e.hp = 0;
+}
+function revive() {
+  const d = DIFF[diff];
+  P.hp = P.maxHp; P.inv = 150; P.frozenT = P.confT = P.slowT = 0; P.kx = P.ky = 0; P.dashT = 0;
+  lv.proj.length = 0; lv.haz.length = 0; lv.revives++;
+  for (const e of lv.enemies) e.stun = Math.max(e.stun, 70);
+  const b = lv.boss;
+  if (b && !b.dying) {
+    const extra = Math.ceil(b.baseHp * d.revive);
+    b.hp += extra; if (b.hp > b.maxHp) b.maxHp = b.hp;
+    b.state = 'walk'; b.t = 0; b.pause = 90; b.reachLen = 0; b.foot = 0; b.glow = 0; b.heat = 0; b.lid = 0;
+    floatText(b.x, b.y - 180, '+' + extra + ' health', '#8f8', 22);
+  } else lv.reviveDebt += d.revive;
+  scene = 'level'; sfx('pickup'); floatText(P.x, P.y - 110, 'REVIVED!', '#ffe14a', 24);
 }
 function doHair() {
   P.spin = 32; P.hairCd = 130; P.spinHit = new Set(); sfx('hair');
@@ -537,6 +563,7 @@ function updateBoss(b) {
   const rage = b.hp < b.maxHp * 0.5;
   if (b.stun > 0) { b.stun--; b.reachLen = 0; if (b.stun % 15 === 0) lv.parts.push({ x: b.x + rand(-20, 20), y: b.y - 150, vx: 0, vy: -1, life: 40, max: 40, color: '#ff6fb5', size: 9, grav: 0, kind: 'h' }); return; }
   b.t++;
+  if (b.state === 'walk' && frame % 3 === 0) b.t = Math.max(0, b.t + DIFF[diff].tempo);
   const p = P, aim = Math.atan2(p.y - b.y, p.x - b.x);
   const done = n => { if (b.t > n) { b.state = 'walk'; b.t = 0; b.glow = 0; } };
 
@@ -742,7 +769,7 @@ function updateLevel() {
   const b = lv.boss;
   if (b) {
     updateBoss(b);
-    if (lv.phase === 'boss' && P.hp < P.maxHp && ++lv.heartT > 420) { lv.heartT = 0; lv.pickups.push({ x: rand(100, W - 100), y: rand(FLOOR_TOP + 30, FLOOR_BOT - 20), t: 0 }); }
+    if (lv.phase === 'boss' && P.hp < P.maxHp && ++lv.heartT > DIFF[diff].heart) { lv.heartT = 0; lv.pickups.push({ x: rand(100, W - 100), y: rand(FLOOR_TOP + 30, FLOOR_BOT - 20), t: 0 }); }
     if (b.dying > 110) {
       const c = lv.c; lv.boss = null; lv.phase = 'done';
       startStory(Object.assign({ bg: c.theme }, c.outro), () => {
@@ -798,16 +825,18 @@ function update() {
   if (wasPressed('m')) muted = !muted;
   switch (scene) {
     case 'title': {
-      const hasSave = !!loadSave();
-      const n = hasSave ? 2 : 1;
-      if (wasPressed('arrowup', 'w', 'arrowdown', 's')) { menuSel = (menuSel + 1) % n; sfx('blip'); }
-      if (!hasSave) menuSel = 0;
+      const items = titleItems(), n = items.length;
+      if (menuSel >= n) menuSel = 0;
+      if (wasPressed('arrowup', 'w')) { menuSel = (menuSel + n - 1) % n; sfx('blip'); }
+      if (wasPressed('arrowdown', 's')) { menuSel = (menuSel + 1) % n; sfx('blip'); }
+      let go = wasPressed('enter', ' '), dir = 1;
       if (tapped) {
-        if (hasSave && tapped.y > 405 && tapped.y < 445) menuSel = 1;
-        else if (tapped.y > 355 && tapped.y < 395) menuSel = 0;
-        else { tapped = false; break; }
+        const i = Math.round((tapped.y - MENU_Y) / MENU_STEP);
+        if (i >= 0 && i < n && Math.abs(tapped.y - (MENU_Y + i * MENU_STEP)) < 20 && Math.abs(tapped.x - W / 2) < 170) { menuSel = i; go = true; dir = tapped.x < W / 2 ? -1 : 1; }
       }
-      if (confirmPressed()) { sfx('pickup'); if (menuSel === 1 && hasSave) continueGame(); else newGame(); }
+      const it = items[menuSel];
+      if (it.id === 'diff') { if (wasPressed('arrowleft', 'a')) cycleDiff(-1); else if (wasPressed('arrowright', 'd') || go) cycleDiff(dir); }
+      else if (go) { sfx('pickup'); if (it.id === 'continue') continueGame(); else newGame(); }
       break;
     }
     case 'story': {
@@ -826,7 +855,14 @@ function update() {
       break;
     case 'gameover':
       overT++;
-      if (overT > 60 && confirmPressed()) startLevel();
+      if (overT === 1) { overSel = 0; if (diff === 'survival') clearSave(); }
+      if (overT > 60) {
+        if (diff === 'survival') { if (confirmPressed()) { scene = 'title'; menuSel = 0; } break; }
+        if (wasPressed('arrowup', 'w', 'arrowdown', 's')) { overSel ^= 1; sfx('blip'); }
+        let go = wasPressed('enter', ' ');
+        if (tapped && Math.abs(tapped.x - W / 2) < 200) for (let i = 0; i < 2; i++) if (Math.abs(tapped.y - (OVER_Y + i * 50)) < 21) { overSel = i; go = true; }
+        if (go) { if (overSel === 0) revive(); else startLevel(); }
+      }
       break;
     case 'victory':
       overT++;
@@ -1390,6 +1426,7 @@ function drawHud() {
   text('STEPHEN\'S GLORY', W - 119, 22, 13, '#ccc');
   g.forEach((b, i) => { const y = 42 + i * 16; text((b[1] ? '★ ' : '☆ ') + b[0], W - 214, y, 13, b[1] ? b[2] : '#555', 'left'); text(b[1] ? 'RESTORED' : 'missing', W - 20, y, 11, b[1] ? '#9f9' : '#666', 'right'); });
   // progress / boss bar
+  text(DIFF[diff].label + (lv.revives ? '  ·  revives: ' + lv.revives : ''), W / 2, lv.boss ? 66 : 52, 12, DIFF[diff].color, 'center', 'bold', '#000');
   if (lv.phase === 'minions' || lv.phase === 'cleared') {
     rr(W / 2 - 110, 10, 220, 30, 8, 'rgba(0,0,0,0.45)');
     text(`Minions defeated: ${Math.min(lv.killed, lv.c.minions.count)} / ${lv.c.minions.count}`, W / 2, 25, 15, '#fff');
@@ -1631,6 +1668,14 @@ function renderReward() {
   if (r.t > 60 && frame % 50 < 35) text('▶ Enter / tap to continue', W - 20, 525, 14, '#ccc', 'right', 'normal');
 }
 
+const MENU_Y = 338, MENU_STEP = 46, OVER_Y = 330;
+let overSel = 0;
+function titleItems() {
+  const sv = loadSave();
+  const items = sv ? [{ id: 'new', label: 'NEW GAME' }, { id: 'continue', label: 'CONTINUE (' + (sv.chapter === 2 ? 'Final Quest' : 'Quest ' + (sv.chapter + 1)) + ')' }] : [{ id: 'new', label: 'START ADVENTURE' }];
+  items.push({ id: 'diff', label: '◀  ' + DIFF[diff].label + '  ▶' });
+  return items;
+}
 function renderTitle() {
   drawBgLive('kingdom');
   const t = frame;
@@ -1641,22 +1686,37 @@ function renderTitle() {
   drawStephen(190, 470, 1, { muscles: false, handsome: false, hair: false }, { s: 2.6 });
   text('?', 240, 280, 40, '#fff', 'center', 'bold', '#000');
   drawNicky(686, 375, { s: 1.2, help: true }); drawCage(686, 375, 0);
-  const hasSave = !!loadSave();
-  const items = hasSave ? ['NEW GAME', 'CONTINUE (' + (loadSave().chapter === 2 ? 'Final Quest' : 'Quest ' + (loadSave().chapter + 1)) + ')'] : ['START ADVENTURE'];
+  const items = titleItems();
   items.forEach((it, i) => {
-    const y = 375 + i * 50, sel = i === menuSel;
-    rr(W / 2 - 160, y - 20, 320, 40, 10, sel ? 'rgba(255,225,74,0.95)' : 'rgba(0,0,0,0.45)');
-    text(it, W / 2, y, 20, sel ? '#2a1a3a' : '#fff');
+    const y = MENU_Y + i * MENU_STEP, sel = i === menuSel, isD = it.id === 'diff';
+    rr(W / 2 - 160, y - 19, 320, 38, 10, sel ? 'rgba(255,225,74,0.95)' : 'rgba(0,0,0,0.5)');
+    if (isD) text('DIFFICULTY', W / 2 - 150, y, 11, sel ? '#5a4a2a' : '#aaa', 'left');
+    text(it.label, W / 2 + (isD ? 30 : 0), y, 20, sel ? '#2a1a3a' : (isD ? DIFF[diff].color : '#fff'));
   });
+  const dy = MENU_Y + items.length * MENU_STEP - 8;
+  rr(W / 2 - 230, dy - 13, 460, 26, 8, 'rgba(0,0,0,0.45)');
+  text(DIFF[diff].label + ': ' + DIFF[diff].desc, W / 2, dy, 14, DIFF[diff].color, 'center', 'bold');
   text('Move: Arrows/WASD   Sword: Space/J   Dodge: Shift   Smile: K   Hair: L   Ultimate: U   Pause: P   Mute: M', W / 2, 520, 14, 'rgba(255,255,255,0.85)', 'center', 'normal', 'rgba(0,0,0,0.6)');
 }
 
 function renderGameOver() {
   renderLevel();
   rr(0, 0, W, H, 0, `rgba(20,0,0,${Math.min(0.75, overT / 60)})`);
-  text('STEPHEN FAINTED...', W / 2, H / 2 - 40, 54, '#ff5a5a', 'center', 'bold', '#000');
-  text('"Just... five more minutes..."', W / 2, H / 2 + 10, 22, '#fff', 'center', 'bold', '#000');
-  if (overT > 60) text('Press Enter / tap to try this quest again', W / 2, H / 2 + 60, 20, '#ffe14a', 'center', 'bold', '#000');
+  text('STEPHEN FAINTED...', W / 2, H / 2 - 90, 54, '#ff5a5a', 'center', 'bold', '#000');
+  text('"Just... five more minutes..."', W / 2, H / 2 - 40, 22, '#fff', 'center', 'bold', '#000');
+  if (overT <= 60) return;
+  if (diff === 'survival') {
+    text('SURVIVAL MODE: the legend ends here.', W / 2, OVER_Y, 24, '#ff4a5a', 'center', 'bold', '#000');
+    text('Press Enter / tap to start over from Quest 1', W / 2, OVER_Y + 44, 20, '#ffe14a', 'center', 'bold', '#000');
+    return;
+  }
+  const extra = Math.round(DIFF[diff].revive * 100);
+  [['REVIVE', lv.boss ? `keep fighting, boss regains ${extra}% health` : `keep going, the boss will have ${extra}% more health`], ['RESTART QUEST', 'start this quest from the beginning']].forEach((o, i) => {
+    const y = OVER_Y + i * 50, sel = i === overSel;
+    rr(W / 2 - 200, y - 21, 400, 42, 10, sel ? 'rgba(255,225,74,0.95)' : 'rgba(0,0,0,0.6)');
+    text(o[0], W / 2, y - 7, 19, sel ? '#2a1a3a' : '#fff');
+    text(o[1], W / 2, y + 11, 12, sel ? '#4a3a2a' : '#bbb', 'center', 'normal');
+  });
 }
 
 function renderVictory() {
