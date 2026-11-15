@@ -8,8 +8,8 @@ Stephen used to be a hero, but years on the couch cost him his muscles, his hand
 
 | Chapter | Boss | Reward |
 |---|---|---|
-| 1. The Soggy Swamp | **Swamp Thing** (throws mud, dives and pops up under you) | **Muscles**: 3x punch damage, more hearts |
-| 2. The Simmering Kitchen | **The Human Crockpot** (stew rings, steam vents, charges; gets dizzy when he hits a wall) | **Handsome looks**: unlocks the Dazzling Smile (stuns enemies and heals you) |
+| 1. The Soggy Swamp | **Swamp Thing** (throws mud, sets off stink clouds full of flies, dives and pops up under you) | **Muscles**: 3x punch damage, more hearts |
+| 2. The Simmering Kitchen | **The Human Crockpot** (shoots rings of stew and seasoning, sets off steam vents, charges; gets dizzy when he hits a wall) | **Handsome looks**: unlocks the Dazzling Smile (stuns enemies and heals you) |
 | 3. The Gloomy Graveyard | **The Undertaker** (thrown tombstones, zombie summons, teleport and coffin drops) | **Great hair**: unlocks the Hair Whip spin attack and faster movement |
 | Finale: Tower of Gloom | The Undertaker's last minions | Princess Nicky is rescued! |
 
