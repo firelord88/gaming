@@ -137,6 +137,7 @@ const joy = { id: null, ox: 0, oy: 0, dx: 0, dy: 0 };
 const BTNS = [
   { id: 'atk', x: 870, y: 452, r: 52, label: 'SWORD' },
   { id: 'ult', x: 760, y: 370, r: 40, label: 'ULT' },
+  { id: 'dash', x: 640, y: 486, r: 36, label: 'DODGE' },
   { id: 'smile', x: 752, y: 478, r: 38, label: 'SMILE' },
   { id: 'hair', x: 880, y: 330, r: 38, label: 'HAIR' },
 ];
@@ -195,7 +196,7 @@ const CHAPTERS = [
       { who: 'Narrator', text: 'Quest 1: Swamp Thing, the Queen of Stench. Deep within the Forbidden Swamp lived a terrifying creature whose presence could clear an entire battlefield without drawing a weapon.' },
       { who: 'Narrator', text: 'Her weapon of choice? An odor so powerful that even the undead refused to approach. Her swamp was filled with poisonous clouds, mutant insects, and mysterious green slime.' },
       { who: 'Narrator', text: 'Stephen entered the swamp with nothing but a rusty sword, questionable courage, and absolutely no upper-body strength.' },
-      { who: 'Stephen', text: 'Swing the sword with SPACE (or J). Move with the ARROWS (or WASD). How hard can it be?' },
+      { who: 'Stephen', text: 'Move with the ARROWS (or WASD). Swing the sword with SPACE (or J). Dodge with SHIFT, it makes me untouchable for a moment. How hard can it be?' },
     ] },
     bossIntro: { right: 'swamp', pages: [
       { who: 'Swamp Thing', text: '*sniff* ...Well, well. A visitor. Nobody has made it this deep into MY swamp in years. Wonder why.' },
@@ -292,8 +293,8 @@ function stats() {
   return {
     speed: L.hair ? 3.9 : L.muscles ? 2.9 : 2.4,
     dmg: L.muscles ? 3 : 1,
-    maxHp: 5 + (L.muscles ? 2 : 0) + (L.handsome ? 1 : 0) + (L.hair ? 2 : 0),
-    range: L.muscles ? 60 : 46,
+    maxHp: 6 + (L.muscles ? 2 : 0) + (L.handsome ? 1 : 0) + (L.hair ? 2 : 0),
+    range: L.muscles ? 62 : 52,
     atkCd: L.muscles ? 16 : 22,
   };
 }
@@ -302,7 +303,7 @@ function startLevel() {
   const c = CHAPTERS[game.chapter];
   const s = stats();
   P = { x: 160, y: 360, facing: 1, hp: s.maxHp, maxHp: s.maxHp, walk: 0, moving: false, atk: 0, atkCd: 0, inv: 60,
-        smileCd: 0, smileT: 0, hairCd: 0, spin: 0, spinHit: new Set(), frozenT: 0, confT: 0, slowT: 0 };
+        smileCd: 0, smileT: 0, hairCd: 0, spin: 0, spinHit: new Set(), frozenT: 0, confT: 0, slowT: 0, dashT: 0, dashCd: 0, dvx: 0, dvy: 0 };
   lv = { c, phase: 'minions', spawned: 0, killed: 0, spawnT: 30, enemies: [], boss: null, proj: [], haz: [], parts: [], texts: [],
          pickups: [], shake: 0, t: 0, banner: { text: c.title, sub: c.subtitle, t: 180 }, heartT: 0, endT: 0, ultReady: false, ultT: 0, flashFx: null };
   scene = 'level'; paused = false;
@@ -334,9 +335,9 @@ function spawnEdgeMinion() {
 function spawnBoss(kind) {
   const base = { kind, x: 760, y: 340, t: 0, state: 'walk', flash: 0, stun: 0, face: -1, hidden: false, alpha: 1, sink: 0, lid: 0, dying: 0,
                 funkCd: 300, lsCd: 0, lsUses: 0, reachLen: 0, rdir: 0, sdir: 0, foot: 0, glow: 0, heat: 0 };
-  if (kind === 'swamp') Object.assign(base, { name: 'SWAMP THING', hp: 30, r: 40 });
-  if (kind === 'crock') Object.assign(base, { name: 'THE HUMAN CROCKPOT', hp: 84, r: 42, vx: 0, vy: 0 });
-  if (kind === 'undertaker') Object.assign(base, { name: 'THE UNDERTAKER', hp: 120, r: 30 });
+  if (kind === 'swamp') Object.assign(base, { name: 'SWAMP THING', hp: 20, r: 40 });
+  if (kind === 'crock') Object.assign(base, { name: 'THE HUMAN CROCKPOT', hp: 70, r: 42, vx: 0, vy: 0 });
+  if (kind === 'undertaker') Object.assign(base, { name: 'THE UNDERTAKER', hp: 160, r: 30 });
   base.maxHp = base.hp;
   lv.boss = base;
   sfx('boss'); lv.shake = 20;
@@ -367,7 +368,7 @@ function floatText(x, y, str, color = '#ffe14a', size = 20) { lv.texts.push({ x,
 /* ---------------- combat ---------------- */
 function hurtPlayer(d, fx, fy) {
   if (P.inv > 0 || P.hp <= 0 || lv.phase === 'end') return;
-  P.hp -= d; P.inv = 70; lv.shake = 10; sfx('hurt');
+  P.hp -= d; P.inv = 90; lv.shake = 10; sfx('hurt');
   const a = Math.atan2(P.y - fy, P.x - fx); P.kx = Math.cos(a) * 9; P.ky = Math.sin(a) * 6;
   burst(P.x, P.y - 35, '#ff5a5a', 8);
   if (P.hp <= 0) { P.hp = 0; scene = 'gameover'; overT = 0; sfx('lose'); }
@@ -422,7 +423,7 @@ function doSmile() {
   sparkles(P.x, P.y - 50, 20);
   for (const e of lv.enemies) if (dist(e, P) < 230) { e.stun = 160; e.kx = Math.sign(e.x - P.x) * 6; }
   const b = lv.boss;
-  if (b && !b.hidden && dist(b, P) < 300) { b.stun = 80; floatText(b.x, b.y - 170, 'blinded!', '#ff8ac8', 22); }
+  if (b && !b.hidden && dist(b, P) < 300) { b.stun = 50; floatText(b.x, b.y - 170, 'blinded!', '#ff8ac8', 22); }
 }
 function doUltimate() {
   lv.ultT = 1; lv.ultReady = false; P.inv = 9999; sfx('smile'); sfx('power');
@@ -449,14 +450,22 @@ function updatePlayer() {
   if (P.frozenT > 0) { P.frozenT--; mx = my = 0; }
   P.moving = Math.hypot(mx, my) > 0.1;
   if (P.moving) { P.walk += 0.22 * (s.speed / 2.4); if (Math.abs(mx) > 0.2) P.facing = Math.sign(mx); }
-  const spd = s.speed * (P.slowT > 0 ? 0.55 : 1);
+  const spd = s.speed * (P.slowT > 0 ? 0.7 : 1);
   P.x += mx * spd + (P.kx || 0); P.y += my * spd * 0.8 + (P.ky || 0);
+  if (P.dashCd > 0) P.dashCd--;
+  if (P.dashT > 0) { P.dashT--; P.x += P.dvx; P.y += P.dvy; if (P.dashT % 3 === 0) burst(P.x, P.y - 4, 'rgba(220,220,200,0.7)', 2, 1, 5, 0); }
   P.kx = (P.kx || 0) * 0.75; P.ky = (P.ky || 0) * 0.75;
   P.x = clamp(P.x, 20, W - 20); P.y = clamp(P.y, FLOOR_TOP, FLOOR_BOT);
   if (P.inv > 0) P.inv--; if (P.atk > 0) P.atk--; if (P.atkCd > 0) P.atkCd--;
   if (P.smileCd > 0) P.smileCd--; if (P.smileT > 0) P.smileT--; if (P.hairCd > 0) P.hairCd--;
   if (lv.phase === 'bossDying' || lv.ultT || P.frozenT > 0) return;
   if (wasPressed('u', 'btn_ult') && lv.ultReady) { doUltimate(); return; }
+  if (wasPressed('shift', 'btn_dash') && P.dashCd <= 0 && P.dashT <= 0) {
+    let dx = mx, dy = my; const dl = Math.hypot(dx, dy);
+    if (dl < 0.1) { dx = P.facing; dy = 0; } else { dx /= dl; dy /= dl; }
+    P.dashT = 11; P.dashCd = 42; P.dvx = dx * 8.5; P.dvy = dy * 7; P.inv = Math.max(P.inv, 20); P.dodging = 20; sfx('blip');
+  }
+  if (P.dodging > 0) P.dodging--;
 
   if (wasPressed(' ', 'j', 'z', 'btn_atk') && P.atkCd <= 0) { P.atk = 10; P.atkCd = s.atkCd; doPunch(); }
   if (wasPressed('k', 'x', 'btn_smile')) {
@@ -518,8 +527,11 @@ function segDist(px, py, x1, y1, x2, y2) {
 }
 function bell() { [196, 196, 147].forEach((f, i) => { tone(f, 1.2, 'triangle', 0.12, null, i * 0.5); tone(f * 2.01, 0.8, 'sine', 0.05, null, i * 0.5); }); }
 
+function touching(b) { return P.inv <= 0 && dist(b, P) < b.r * 0.55 + 12; }
+function bump(b, d) { hurtPlayer(d, b.x, b.y); P.kx *= 1.6; P.ky *= 1.6; b.pause = 55; }
 function updateBoss(b) {
   if (b.flash > 0) b.flash--;
+  if (b.pause > 0) b.pause--;
   if (b.dying) { b.dying++; if (b.dying % 6 === 0) burst(b.x + rand(-30, 30), b.y - rand(10, 90), pick(['#fff', '#ffd34d', '#ff6a3a']), 6, 4, 5); return; }
   if (lv.ultT) return;
   const rage = b.hp < b.maxHp * 0.5;
@@ -532,7 +544,7 @@ function updateBoss(b) {
     if (b.funkCd > 0) b.funkCd--;
     switch (b.state) {
       case 'walk':
-        moveToward(b, p.x, p.y, rage ? 1.3 : 0.9);
+        if (!b.pause) moveToward(b, p.x, p.y, rage ? 1.3 : 0.9);
         if (b.t > (rage ? 75 : 105)) {
           const opts = ['breath', 'breath', 'cloud', 'cloud']; if (b.funkCd <= 0) opts.push('funk', 'funk');
           b.state = pick(opts); b.t = 0;
@@ -542,7 +554,7 @@ function updateBoss(b) {
         b.face = Math.sign(p.x - b.x) || 1;
         if (b.t === 1) callout(b, 'SWAMP BREATH!', '#b6f04a');
         if (b.t === 30 || (rage && b.t === 58)) {
-          const n = rage ? 7 : 5; for (let i = 0; i < n; i++) proj(b.x, b.y, aim + (i - (n - 1) / 2) * 0.2, rage ? 4 : 3.4, 'breath');
+          const n = rage ? 5 : 3; for (let i = 0; i < n; i++) proj(b.x, b.y, aim + (i - (n - 1) / 2) * 0.28, rage ? 3.6 : 3.1, 'breath');
           sfx('splat');
         }
         done(80); break;
@@ -556,8 +568,8 @@ function updateBoss(b) {
       case 'funk':
         if (b.t === 1) { callout(b, 'THE FUNK BOMB!', '#e6ff3a'); sfx('boss'); }
         b.glow = Math.min(1, b.t / 70);
-        if (b.t === 70 || b.t === 88) {
-          const n = rage ? 18 : 14, off = b.t === 88 ? Math.PI / n : 0;
+        if (b.t === 70 || (rage && b.t === 88)) {
+          const n = rage ? 14 : 10, off = b.t === 88 ? Math.PI / n : 0;
           for (let i = 0; i < n; i++) proj(b.x, b.y, off + i / n * TAU, 3, 'breath');
           if (b.t === 70) {
             lv.shake = 20; sfx('boom'); lv.flashFx = { color: '150,230,40', t: 30 };
@@ -568,14 +580,14 @@ function updateBoss(b) {
         if (b.t > 90) { b.funkCd = 420; b.glow = 0; }
         done(100); break;
     }
-    if (dist(b, p) < b.r + 14) hurtPlayer(1, b.x, b.y);
+    if (touching(b)) bump(b, 1);
   }
   else if (b.kind === 'crock') {
     if (b.lsCd > 0) b.lsCd--;
     switch (b.state) {
       case 'walk':
         b.lid = Math.max(0, b.lid - 1);
-        moveToward(b, p.x, p.y, rage ? 1.3 : 0.9);
+        if (!b.pause) moveToward(b, p.x, p.y, rage ? 1.3 : 0.9);
         if (b.t > (rage ? 75 : 100)) {
           const opts = ['slow', 'pressure', 'season', 'season', 'charge', 'charge'];
           if (b.hp < b.maxHp * 0.7 && b.lsCd <= 0 && b.lsUses < 2) opts.push('lowslow', 'lowslow');
@@ -636,15 +648,15 @@ function updateBoss(b) {
         done(75); break;
     }
     b.x = clamp(b.x, 50, W - 50); b.y = clamp(b.y, FLOOR_TOP + 15, FLOOR_BOT - 5);
-    if (b.state !== 'dizzy' && dist(b, p) < b.r + 14) hurtPlayer(b.state === 'charge' ? 2 : 1, b.x, b.y);
+    if (b.state !== 'dizzy' && touching(b)) bump(b, b.state === 'charge' ? 2 : 1);
   }
   else if (b.kind === 'undertaker') {
     const minions = lv.enemies.filter(e => e.hp > 0).length;
     switch (b.state) {
       case 'walk':
         b.reachLen = 0; b.foot = 0;
-        moveToward(b, p.x, p.y, rage ? 1.4 : 1.05);
-        if (b.t > (rage ? 70 : 95)) {
+        if (!b.pause) moveToward(b, p.x, p.y, rage ? 1.4 : 1.05);
+        if (b.t > (rage ? 45 : 65)) {
           const opts = ['stare', 'reach', 'reach', 'stomp', 'stomp']; if (minions < 3) opts.push('bell');
           b.state = pick(opts); b.t = 0;
         }
@@ -663,7 +675,7 @@ function updateBoss(b) {
         if (b.t >= 45 && b.t < 55) b.reachLen = (b.t - 44) * 75;
         if (b.t >= 55 && b.t < 62) {
           const hx = b.x + Math.cos(b.rdir) * b.reachLen, hy = b.y + Math.sin(b.rdir) * b.reachLen;
-          if (segDist(p.x, p.y, b.x, b.y, hx, hy) < 28) hurtPlayer(1, hx, hy);
+          if (segDist(p.x, p.y, b.x, b.y, hx, hy) < 28) hurtPlayer(2, hx, hy);
         }
         if (b.t === 45) sfx('hair');
         if (b.t >= 62) b.reachLen = Math.max(0, b.reachLen - 70);
@@ -673,7 +685,7 @@ function updateBoss(b) {
         b.foot = b.t < 30 ? b.t / 30 : 0;
         if (b.t === 30 || (rage && b.t === 58)) {
           const n = rage ? 16 : 12, off = b.t === 58 ? Math.PI / n : 0;
-          for (let i = 0; i < n; i++) proj(b.x, b.y, off + i / n * TAU, 3.4, 'quake');
+          for (let i = 0; i < n; i++) proj(b.x, b.y, off + i / n * TAU, 4, 'quake');
           lv.shake = 16; sfx('boom'); burst(b.x, b.y, '#6b5a4a', 14, 4, 5);
         }
         done(85); break;
@@ -686,7 +698,7 @@ function updateBoss(b) {
         done(80); break;
     }
     b.x = clamp(b.x, 50, W - 50); b.y = clamp(b.y, FLOOR_TOP + 15, FLOOR_BOT - 5);
-    if (dist(b, p) < b.r + 14) hurtPlayer(1, b.x, b.y);
+    if (touching(b)) bump(b, 1);
   }
 }
 
@@ -730,7 +742,7 @@ function updateLevel() {
   const b = lv.boss;
   if (b) {
     updateBoss(b);
-    if (lv.phase === 'boss' && P.hp < P.maxHp && ++lv.heartT > 720) { lv.heartT = 0; lv.pickups.push({ x: rand(100, W - 100), y: rand(FLOOR_TOP + 30, FLOOR_BOT - 20), t: 0 }); }
+    if (lv.phase === 'boss' && P.hp < P.maxHp && ++lv.heartT > 420) { lv.heartT = 0; lv.pickups.push({ x: rand(100, W - 100), y: rand(FLOOR_TOP + 30, FLOOR_BOT - 20), t: 0 }); }
     if (b.dying > 110) {
       const c = lv.c; lv.boss = null; lv.phase = 'done';
       startStory(Object.assign({ bg: c.theme }, c.outro), () => {
@@ -746,11 +758,11 @@ function updateLevel() {
 
   for (const p of lv.proj) {
     p.x += p.vx; p.y += p.vy; p.life--; p.rot += 0.15;
-    if (dist(p, P) < p.r + 12 && P.inv <= 0) {
+    if (dist(p, P) < p.r * 0.7 + 9 && P.inv <= 0) {
       hurtPlayer(1, p.x, p.y); p.life = 0;
       burst(p.x, p.y - p.z, { breath: '#9c3', stew: '#ff7a1a', spice: '#a0662a', quake: '#6b5a4a' }[p.kind] || '#888', 6);
-      if (p.kind === 'breath') { P.slowT = 150; floatText(P.x, P.y - 110, 'MORALE: ZERO', '#b6f04a', 18); }
-      if (p.kind === 'spice') { P.confT = 180; floatText(P.x, P.y - 110, 'CONFUSED & NAUSEOUS!', '#e0a050', 18); }
+      if (p.kind === 'breath') { P.slowT = 80; floatText(P.x, P.y - 110, 'MORALE: ZERO', '#b6f04a', 18); }
+      if (p.kind === 'spice') { P.confT = 120; floatText(P.x, P.y - 110, 'CONFUSED & NAUSEOUS!', '#e0a050', 18); }
       if (p.kind === 'quake') { P.slowT = 90; floatText(P.x, P.y - 110, 'TERRIFIED!', '#c69bff', 18); }
     }
     if (p.x < -40 || p.x > W + 40 || p.y < FLOOR_TOP - 60 || p.y > H + 30) p.life = 0;
@@ -1394,7 +1406,7 @@ function drawTouch() {
   if (!isTouch) return;
   for (const b of BTNS) {
     if (b.id === 'ult' && !lv.ultReady) continue;
-    const on = b.id === 'atk' || b.id === 'ult' || (b.id === 'smile' && game.look.handsome) || (b.id === 'hair' && game.look.hair);
+    const on = b.id === 'atk' || b.id === 'ult' || b.id === 'dash' || (b.id === 'smile' && game.look.handsome) || (b.id === 'hair' && game.look.hair);
     circ(b.x, b.y, b.r, on ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)');
     ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, TAU); ctx.stroke();
     text(b.label, b.x, b.y, 14, on ? '#fff' : '#777');
@@ -1506,7 +1518,7 @@ function renderLevel() {
   for (const h of lv.haz) if (h.kind === 'coffin' && h.t >= h.warn) list.push({ y: h.y, d: () => drawHazard(h) });
   list.push({ y: P.y, d: () => {
     ell(P.x, P.y, 16, 5, 'rgba(0,0,0,0.35)');
-    if (P.inv > 0 && P.inv % 8 < 4 && scene === 'level') return;
+    if (P.inv > 0 && !P.dodging && P.inv % 8 < 4 && scene === 'level') return;
     if (P.smileT > 0) circ(P.x, P.y - 50, 60 + (50 - P.smileT) * 3, `rgba(255,240,160,${P.smileT / 50 * 0.25})`);
     if (P.frozenT > 0) ctx.filter = 'grayscale(1) brightness(1.1) sepia(0.4) hue-rotate(220deg)';
     drawStephen(P.x, P.y, P.facing, game.look, { s: 1.3, walk: P.walk, moving: P.moving, atk: P.atk, spin: P.spin, sparkle: P.smileT > 0 || lv.ultT > 0 });
@@ -1636,7 +1648,7 @@ function renderTitle() {
     rr(W / 2 - 160, y - 20, 320, 40, 10, sel ? 'rgba(255,225,74,0.95)' : 'rgba(0,0,0,0.45)');
     text(it, W / 2, y, 20, sel ? '#2a1a3a' : '#fff');
   });
-  text('Move: Arrows/WASD   Sword: Space/J   Smile: K   Hair: L   Ultimate: U   Pause: P   Mute: M', W / 2, 520, 14, 'rgba(255,255,255,0.85)', 'center', 'normal', 'rgba(0,0,0,0.6)');
+  text('Move: Arrows/WASD   Sword: Space/J   Dodge: Shift   Smile: K   Hair: L   Ultimate: U   Pause: P   Mute: M', W / 2, 520, 14, 'rgba(255,255,255,0.85)', 'center', 'normal', 'rgba(0,0,0,0.6)');
 }
 
 function renderGameOver() {

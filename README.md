@@ -21,6 +21,7 @@ Then Stephen enters the tower, rescues Nicky and is crowned the greatest hero in
 ### Controls
 - Move: Arrow keys / WASD (touch: drag on the left side of the screen)
 - Sword: Space / J
+- Dodge: Shift (touch: DODGE button), a quick dash that makes you untouchable for a moment
 - Blinding Smile: K (after Quest 2)
 - Hair Whip: L (after Quest 2)
 - The Handsome Revival: U (when it unlocks in the final battle)
